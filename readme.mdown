@@ -1,0 +1,48 @@
+scala-cassandra
+==========
+
+The way shit is supposed to work:
+
+    Cassandra.start
+    
+    Keyspace("fuck") { ks =>
+      implicit val consistency = ReadConsistency.One
+      
+      //get uses the % operator to denote a supercolumn when chaining paths together
+      //this is to give the scala compiler the hint that the return type is going to be a
+      //supercolumn when we execute with just the supercolumn type
+      val column = ks.get("row", "column_family") % "supercolumn" / "column" ! ReadConsistency.Quorum
+      val supercolumn = ks.get("row", "column_family") % "supercolumn" !
+      val column = ks.get("row", "cf") / "c" !
+      
+      
+      val query = ks.rangeSlices("column_family" -> "supercolumn")
+      //when specifying key ranges '...' denotes a token range.  '..' is a key range.
+      query.keys("from_key_token" ... "to_key_token" limit 100)
+      // we can set the columns explicitly like this
+      query.columns("column1", "column2", "column3")
+      // or as a range
+      query.columns("start" .. "end" limit 100)
+      // execute the query
+      query ! ReadConsistency.Quorum
+      
+      //inserts use the arrow notation for columnfamily and supercolumn paths
+      ks.insert[T]("row", "column_family" -> "supercolumn" -> "column", value)
+      ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.Zero)
+      
+      //batches can be built up a little at a time before being executed
+      val batch = ks.batch("row")
+      batch.add("cf" -> "supercolumn" -> "column", value, timestamp)
+      batch ! WriteConsistency.Zero
+      
+    }
+    
+    val keyspaces = Cassandra.keyspaces
+    val clusterName = Cassandra.clusterName
+    val version = Cassandra.version
+    val ring = Cassandra.ring(keyspace)
+    
+    Keyspace("fuck") << 
+    
+    Keyspace("fuck").get("columnfamily" -> "supercolumn" -> "column")
+    Keyspace("fuck").get("cf" -> "sc" -> "c", Consistency.One)

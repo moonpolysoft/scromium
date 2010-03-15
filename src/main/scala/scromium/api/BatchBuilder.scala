@@ -1,0 +1,57 @@
+package scromium.api
+
+import scromium._
+import serializers._
+import org.apache.cassandra.thrift
+import scala.collection.mutable.HashMap
+import scala.collection.mutable.ArrayBuffer
+import java.util.ArrayList
+import scala.collection.JavaConversions._
+
+class BatchBuilder(ks : Keyspace, row : String) {
+  val operations = new HashMap[String, ArrayBuffer[thrift.ColumnOrSuperColumn]]
+  
+  def !(implicit consistency : WriteConsistency) {
+    ks.pool.withConnection { conn =>
+      val map = operations.foldLeft(new java.util.HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]) { (m , tuple) =>
+        val (cf, list) = tuple
+        m.put(cf, asList(list))
+        m
+      }
+/*      val map = operations.map[ArrayBuffer[thrift.ColumnOrSuperColumn], scala.collection.mutable.Map[String, ArrayList[thrift.ColumnOrSuperColumn]]]({ (cf : String, list : ArrayBuffer[thrift.ColumnOrSuperColumn]) =>
+        (cf, asList(list))
+      }.tupled)*/
+      conn.client.batch_insert(ks.name, row, map, consistency.thrift)
+    }
+  }
+  
+  def add[A,B,C](ins : ((String, A), B), value : C, timestamp : Long = System.currentTimeMillis)
+    (implicit scSer : Serializer[A],
+              cSer : Serializer[B],
+              vSer : Serializer[C]) : BatchBuilder = {
+       val ((cf, sc), c) = ins
+       val ops = operations.getOrElseUpdate(cf, new ArrayBuffer[thrift.ColumnOrSuperColumn])
+       val scAry = scSer.serialize(sc)
+       val container = ops.find({ container => container.super_column.name == scAry }).getOrElse {
+         val container = new thrift.ColumnOrSuperColumn
+         val superColumn = new thrift.SuperColumn
+         container.super_column = superColumn
+         ops += container
+         superColumn.name = scAry
+         superColumn.columns = new ArrayList[thrift.Column]
+         container
+       }
+       val column = new thrift.Column
+       column.name = cSer.serialize(c)
+       column.timestamp = timestamp
+       column.value = vSer.serialize(value)
+       container.super_column.columns.add(column)
+       this
+  }
+  
+/*  def add[A,B](ins : (String, A), value : B, timestamp : Long = System.currentTimeMillis)
+    (implicit cSer : Serializer[A],
+              vSer : Serializer[B]) : BatchBuilder = {
+       this
+  }*/
+}

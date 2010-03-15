@@ -13,11 +13,7 @@ import java.util.ArrayList
 class BatchBuilderSpec extends Specification with Mockito with TestHelper {
   "BatchBuilder" should {
     "execute a batch_insert with a super column" in {
-      val connection = mock[Connection]
-      val pool = fakeConnectionPool(connection)
-      val client = mock[thrift.Cassandra.Client]
-      Keyspace.pool = pool
-      connection.client returns client
+      val client = clientSetup
       val timestamp = System.currentTimeMillis
       val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
       val list = new ArrayList[thrift.ColumnOrSuperColumn]
@@ -46,11 +42,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
     }
     
     "execute a batch_insert with a single column" in {
-      val connection = mock[Connection]
-      val pool = fakeConnectionPool(connection)
-      val client = mock[thrift.Cassandra.Client]
-      Keyspace.pool = pool
-      connection.client returns client
+      val client = clientSetup
       val timestamp = System.currentTimeMillis
       val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
       val list = new ArrayList[thrift.ColumnOrSuperColumn]

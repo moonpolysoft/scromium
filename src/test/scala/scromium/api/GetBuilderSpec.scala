@@ -11,11 +11,7 @@ import serializers.Serializers._
 class GetBuilderSpec extends Specification with Mockito with TestHelper {
   "GetBuilder" should {
     "execute a simple column get" in {
-      val connection = mock[Connection]
-      val pool = fakeConnectionPool(connection)
-      val client = mock[thrift.Cassandra.Client]
-      Keyspace.pool = pool
-      connection.client returns client
+      val client = clientSetup
       val cp = new thrift.ColumnPath
       cp.column_family = "cf"
       cp.column = "c".getBytes
@@ -31,11 +27,7 @@ class GetBuilderSpec extends Specification with Mockito with TestHelper {
     }
     
     "execute a supercolumn get" in {
-      val connection = mock[Connection]
-      val pool = fakeConnectionPool(connection)
-      val client = mock[thrift.Cassandra.Client]
-      Keyspace.pool = pool
-      connection.client returns client
+      val client = clientSetup
       val cp = new thrift.ColumnPath
       cp.column_family = "cf"
       cp.super_column = "c".getBytes

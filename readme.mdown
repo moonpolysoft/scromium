@@ -36,13 +36,3 @@ The way shit is supposed to work:
       batch ! WriteConsistency.Zero
       
     }
-    
-    val keyspaces = Cassandra.keyspaces
-    val clusterName = Cassandra.clusterName
-    val version = Cassandra.version
-    val ring = Cassandra.ring(keyspace)
-    
-    Keyspace("fuck") << 
-    
-    Keyspace("fuck").get("columnfamily" -> "supercolumn" -> "column")
-    Keyspace("fuck").get("cf" -> "sc" -> "c", Consistency.One)

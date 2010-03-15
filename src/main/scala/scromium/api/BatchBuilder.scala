@@ -18,9 +18,6 @@ class BatchBuilder(ks : Keyspace, row : String) {
         m.put(cf, asList(list))
         m
       }
-/*      val map = operations.map[ArrayBuffer[thrift.ColumnOrSuperColumn], scala.collection.mutable.Map[String, ArrayList[thrift.ColumnOrSuperColumn]]]({ (cf : String, list : ArrayBuffer[thrift.ColumnOrSuperColumn]) =>
-        (cf, asList(list))
-      }.tupled)*/
       conn.client.batch_insert(ks.name, row, map, consistency.thrift)
     }
   }

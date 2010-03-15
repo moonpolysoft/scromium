@@ -44,5 +44,34 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
       
       client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
     }
+    
+    "execute a batch_insert with a single column" in {
+      val connection = mock[Connection]
+      val pool = fakeConnectionPool(connection)
+      val client = mock[thrift.Cassandra.Client]
+      Keyspace.pool = pool
+      connection.client returns client
+      val timestamp = System.currentTimeMillis
+      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
+      val list = new ArrayList[thrift.ColumnOrSuperColumn]
+      val column = new thrift.Column
+      column.name = "c".getBytes
+      column.value = "value".getBytes
+      column.timestamp = timestamp
+      val container = new thrift.ColumnOrSuperColumn
+      container.column = column
+      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
+      operations.add(container)
+      map.put("cf", operations)
+      
+      Keyspace("ks") {ks =>
+        implicit val consistency = WriteConsistency.Any
+        val batch = ks.batch("row")
+        batch.add("cf" -> "c", "value", timestamp)
+        batch!
+      }
+      
+      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+    }
   }
 }

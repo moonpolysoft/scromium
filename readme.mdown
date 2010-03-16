@@ -16,13 +16,13 @@ The way shit is supposed to work:
       val column = ks.get("row", "cf") / "c" !
       
       
-      val query = ks.rangeSlices("column_family" -> "supercolumn")
-      //when specifying key ranges '...' denotes a token range.  '..' is a key range.
-      query.keys("from_key_token" ... "to_key_token" limit 100)
+      val query = ks.rangeSlices("column_family", "supercolumn")
+      
+      query.keys("from_key", "to_key", limit=100)
       // we can set the columns explicitly like this
       query.columns("column1", "column2", "column3")
       // or as a range
-      query.columns("start" .. "end" limit 100)
+      query.columns("start", "end" limit=100)
       // execute the query
       query ! ReadConsistency.Quorum
       

@@ -13,7 +13,7 @@ class ClusterDiscovery {
     val client = new thrift.Cassandra.Client(new TBinaryProtocol(socket))
     val tokenMap = JSON.parseObject(client.get_string_property("token map"))
     socket.close
-    val seq = for ((key, value) <- tokenMap if value.isInstanceOf[String]) yield(value)
-    seq.toSeq.asInstanceOf[Seq[String]].removeDuplicates
+    val seq = for ((key, value) <- tokenMap if value.isInstanceOf[String]) yield(value.asInstanceOf[String])
+    seq.toSeq.removeDuplicates
   }
 }

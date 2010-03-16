@@ -44,13 +44,9 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
     }
   }
   
-/*  def insert[A, B](row : String, ins : (String, A), value : B, timestamp : Long = System.currentTimeMillis)
-    (implicit cSer : Serializer[A],
-              vSer : Serializer[B],
-              consistency : WriteConsistency) {
-       val (cf, c) = ins
-       
-  }*/
+  def rangeSlices(cf : String) = new ColumnQueryBuilder(this, cf)
+  
+  def rangeSlices[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new SuperColumnQueryBuilder(this, cf, ser.serialize(superColumn))
   
   def batch(row : String) = new BatchBuilder(this, row)
 }

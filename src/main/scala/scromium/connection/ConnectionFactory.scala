@@ -41,13 +41,16 @@ class ConnectionFactory(var hosts : Seq[String], val port : Int, socketFactory :
       case host :: tail =>
         try {
           val socket = socketFactory.make(host, port)
-          socket.open
+          if (!socket.isOpen) socket.open
           socket
         } catch {
-          case ex : TTransportException => createSocket(tail)
+          case ex : TTransportException => 
+            println("ex " + ex.getMessage)
+            ex.printStackTrace
+            createSocket(tail)
         }
     }
-    
+    println("trying to create a socket with hosts list " + hosts)
     val socket = createSocket(hosts)
     val first :: tail = hosts
     hosts = tail ++ List(first)

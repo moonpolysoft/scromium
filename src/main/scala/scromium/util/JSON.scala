@@ -20,7 +20,7 @@ object JSON extends JavaTokenParsers {
   def value: Parser[Any] = ( 
     obj 
     | arr 
-    | stringLiteral 
+    | stringLiteral ^^ (x => x.substring(1,x.length - 1))
     | floatingPointNumber ^^ (_.toInt) 
     | "null" ^^ (x => null) 
     | "true" ^^ (x => true) 

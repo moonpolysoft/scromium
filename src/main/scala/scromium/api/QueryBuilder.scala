@@ -32,7 +32,7 @@ trait QueryBuilder[S] {
     this.asInstanceOf[S]
   }
   
-  def sliceRange[A, B](startColumn : A, endColumn : B, reversed : Boolean = false, limit : Int = 100)(implicit startSer : Serializer[A], endSer : Serializer[B]) : S = {
+  def columnRange[A, B](startColumn : A, endColumn : B, reversed : Boolean = false, limit : Int = 100)(implicit startSer : Serializer[A], endSer : Serializer[B]) : S = {
     if (predicate.slice_range == null) {
       predicate.slice_range = new thrift.SliceRange
     }

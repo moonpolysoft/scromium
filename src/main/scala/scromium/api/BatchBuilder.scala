@@ -22,7 +22,32 @@ class BatchBuilder(ks : Keyspace, row : String) {
     }
   }
   
-  def add[A,B,C](ins : Tuple2[_,_], value : C, timestamp : Long = System.currentTimeMillis)
+  def add[A,B](ins : Tuple2[String,A], value : B)
+    (implicit cSer : Serializer[A],
+              vSer : Serializer[B]) : BatchBuilder = add(ins, value, System.currentTimeMillis)(cSer, vSer)
+  
+  def add[A,B](ins : Tuple2[String,A], value : B, timestamp : Long)
+    (implicit cSer : Serializer[A],
+              vSer : Serializer[B]) : BatchBuilder = ins match {
+                case (cf : String, c : A) =>
+                  val ops = operations.getOrElseUpdate(cf, new ArrayBuffer[thrift.ColumnOrSuperColumn])
+                  val cAry = cSer.serialize(c)
+                  val container = new thrift.ColumnOrSuperColumn
+                  val column = new thrift.Column
+                  container.column = column
+                  ops += container
+                  column.name = cAry
+                  column.timestamp = timestamp
+                  column.value = vSer.serialize(value)
+                  this
+              }
+  
+  def add[A,B,C](ins : Tuple2[Tuple2[String, A],B], value : C)
+    (implicit scSer : Serializer[A],
+              cSer : Serializer[B],
+              vSer : Serializer[C]) : BatchBuilder = add(ins, value, System.currentTimeMillis)(scSer,cSer,vSer)
+  
+  def add[A,B,C](ins : Tuple2[Tuple2[String, A],B], value : C, timestamp : Long)
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
               vSer : Serializer[C]) : BatchBuilder = ins match {
@@ -44,22 +69,5 @@ class BatchBuilder(ks : Keyspace, row : String) {
       column.value = vSer.serialize(value)
       container.super_column.columns.add(column)
       this
-    case (cf : String, c : B) =>
-      val ops = operations.getOrElseUpdate(cf, new ArrayBuffer[thrift.ColumnOrSuperColumn])
-      val cAry = cSer.serialize(c)
-      val container = new thrift.ColumnOrSuperColumn
-      val column = new thrift.Column
-      container.column = column
-      ops += container
-      column.name = cAry
-      column.timestamp = timestamp
-      column.value = vSer.serialize(value)
-      this
   }
-  
-/*  def add[A,B](ins : (String, A), value : B, timestamp : Long = System.currentTimeMillis)
-    (implicit cSer : Serializer[A],
-              vSer : Serializer[B]) : BatchBuilder = {
-       this
-  }*/
 }

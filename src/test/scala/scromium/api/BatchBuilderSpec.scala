@@ -6,7 +6,8 @@ import org.mockito.Matchers._
 import org.apache.cassandra.thrift
 import scromium._
 import connection._
-import serializers.Serializers._
+import serializers._
+import Serializers._
 import java.util.HashMap
 import java.util.ArrayList
 
@@ -60,6 +61,39 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         implicit val consistency = WriteConsistency.Any
         val batch = ks.batch("row")
         batch.add("cf" -> "c", "value", timestamp)
+        batch!
+      }
+      
+      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+    }
+    
+    "pick the right serializer" in {
+      val client = clientSetup
+      val timestamp = System.currentTimeMillis
+      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
+      val list = new ArrayList[thrift.ColumnOrSuperColumn]
+      val column = new thrift.Column
+      column.name = "c".getBytes
+      column.value = Array[Byte](0)
+      column.timestamp = timestamp
+      val container = new thrift.ColumnOrSuperColumn
+      container.column = column
+      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
+      operations.add(container)
+      map.put("cf", operations)
+      
+      class Fuck {}
+      
+      implicit object FuckSerializer extends Serializer[Fuck] {
+        def serialize(fuck : Fuck) = Array[Byte](0)
+        
+        def deserialize(ary : Array[Byte]) = new Fuck
+      }
+      
+      Keyspace("ks") {ks =>
+        implicit val consistency = WriteConsistency.Any
+        val batch = ks.batch("row")
+        batch.add("cf" -> "c", new Fuck, timestamp)
         batch!
       }
       

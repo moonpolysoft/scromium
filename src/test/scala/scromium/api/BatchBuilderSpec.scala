@@ -99,5 +99,40 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
       
       client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
     }
+    
+    "pick a covariant serializer" in {
+      val client = clientSetup
+      val timestamp = System.currentTimeMillis
+      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
+      val list = new ArrayList[thrift.ColumnOrSuperColumn]
+      val column = new thrift.Column
+      column.name = "c".getBytes
+      column.value = Array[Byte](0)
+      column.timestamp = timestamp
+      val container = new thrift.ColumnOrSuperColumn
+      container.column = column
+      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
+      operations.add(container)
+      map.put("cf", operations)
+      
+      trait Balls
+      
+      class Fuck extends Balls
+      
+      implicit object BallsSerializer extends Serializer[Balls] {
+        def serialize(fuck : Balls) = Array[Byte](0)
+        
+        def deserialize(ary : Array[Byte]) : Balls = new Fuck
+      }
+      
+      Keyspace("ks") {ks =>
+        implicit val consistency = WriteConsistency.Any
+        val batch = ks.batch("row")
+        batch.add("cf" -> "c", new Fuck, timestamp)
+        batch!
+      }
+      
+      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+    }
   }
 }

@@ -1,6 +1,6 @@
 package scromium.api
 
-import scromium.serializers.Serializer
+import scromium.serializers.Deserializer
 import org.apache.cassandra.thrift
 
 /**
@@ -15,6 +15,6 @@ class GetColumn(column : thrift.Column) {
   def value = column.value
   def timestamp = column.timestamp
   
-  def valueAs[T](implicit serializer : Serializer[T]) = serializer.deserialize(value)
-  def nameAs[T](implicit serializer : Serializer[T]) = serializer.deserialize(name)
+  def valueAs[T](implicit des : Deserializer[T]) = des.deserialize(value)
+  def nameAs[T](implicit des : Deserializer[T]) = des.deserialize(name)
 }

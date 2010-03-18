@@ -11,6 +11,6 @@ class GetSuperColumn(superColumn : thrift.SuperColumn) extends Iterable[GetColum
   var columns = superColumn.columns.map(new GetColumn(_))
   
   def name = superColumn.name
-  def nameAs[T](serializer : Serializer[T]) = serializer.deserialize(name)
+  def nameAs[T](deserializer : Deserializer[T]) = deserializer.deserialize(name)
   def iterator = columns.iterator
 }

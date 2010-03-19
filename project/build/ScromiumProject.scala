@@ -11,7 +11,4 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   val pool = "commons-pool" % "commons-pool" % "1.5.4" withSources() intransitive()
   val slf4japi = "org.slf4j" % "slf4j-api" % "1.5.11" withSources() intransitive()
   val slf4j = "org.slf4j" % "slf4j-jdk14" % "1.5.11" withSources() intransitive()
- /*  val cassandra = "org.apache.cassandra" % "apache-cassandra" % "0.6.0-beta2" withSources()
-  val thrift = "org.apache.thrift" % "libthrift" % "r917130" withSources()
-  val specs = */
 }

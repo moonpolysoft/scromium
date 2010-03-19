@@ -1,6 +1,8 @@
 import sbt._
 
 class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with BasicScalaIntegrationTesting {
+  override def compileOptions = Deprecation :: Unchecked :: super.compileOptions.toList
+  
   val codaRepo = "Coda Hale's Repository" at "http://repo.codahale.com/"
   val jetlangRepo = "Jet Lang Repository" at "http://jetlang.googlecode.com/svn/repo/"
   

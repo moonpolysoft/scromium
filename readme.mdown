@@ -28,11 +28,11 @@ The way shit is supposed to work:
       
       //inserts use the arrow notation for columnfamily and supercolumn paths
       ks.insert[T]("row", "column_family" -> "supercolumn" -> "column", value)
-      ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.Zero)
+      ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.One)
       
       //batches can be built up a little at a time before being executed
       val batch = ks.batch("row")
       batch.add("cf" -> "supercolumn" -> "column", value, timestamp)
-      batch ! WriteConsistency.Zero
+      batch ! WriteConsistency.One
       
     }

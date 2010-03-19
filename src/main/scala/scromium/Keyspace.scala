@@ -59,9 +59,15 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
     }
   }
   
-  def rangeSlices(cf : String) = new ColumnQueryBuilder(this, cf)
+  def query(cf : String) = new ColumnQueryBuilder(this, cf)
   
-  def rangeSlices[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new SuperColumnQueryBuilder(this, cf, ser.serialize(superColumn))
+  def querySuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnQueryBuilder(this, cf, ser.serialize(superColumn))
+  def querySuper(cf : String) = new SuperColumnQueryBuilder(this, cf)
+  
+  def scan(cf : String) = new ColumnScanBuilder(this, cf)
+  
+  def scanSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new SuperColumnQueryBuilder(this, cf, ser.serialize(superColumn))
+  def scanSuper(cf : String) = new SuperColumnQueryBuilder(this, cf, ser.serialize(superColumn))
   
   def batch(row : String) = new BatchBuilder(this, row)
 }

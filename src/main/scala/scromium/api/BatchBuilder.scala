@@ -29,9 +29,9 @@ class BatchBuilder(ks : Keyspace, row : String) {
   def add[A,B](ins : Tuple2[String,A], value : B, timestamp : Long)
     (implicit cSer : Serializer[A],
               vSer : Serializer[B]) : BatchBuilder = ins match {
-                case (cf : String, c : A) =>
+                case (cf : String, c : Any) =>
                   val ops = operations.getOrElseUpdate(cf, new ArrayBuffer[thrift.ColumnOrSuperColumn])
-                  val cAry = cSer.serialize(c)
+                  val cAry = cSer.serialize(c.asInstanceOf[A])
                   val container = new thrift.ColumnOrSuperColumn
                   val column = new thrift.Column
                   container.column = column
@@ -51,9 +51,9 @@ class BatchBuilder(ks : Keyspace, row : String) {
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
               vSer : Serializer[C]) : BatchBuilder = ins match {
-    case ((cf : String, sc : A), c : B) =>
+    case ((cf : String, sc : Any), c : Any) =>
       val ops = operations.getOrElseUpdate(cf, new ArrayBuffer[thrift.ColumnOrSuperColumn])
-      val scAry = scSer.serialize(sc)
+      val scAry = scSer.serialize(sc.asInstanceOf[A])
       val container = ops.find({ container => container.super_column.name == scAry }).getOrElse {
         val container = new thrift.ColumnOrSuperColumn
         val superColumn = new thrift.SuperColumn
@@ -64,7 +64,7 @@ class BatchBuilder(ks : Keyspace, row : String) {
         container
       }
       val column = new thrift.Column
-      column.name = cSer.serialize(c)
+      column.name = cSer.serialize(c.asInstanceOf[B])
       column.timestamp = timestamp
       column.value = vSer.serialize(value)
       container.super_column.columns.add(column)

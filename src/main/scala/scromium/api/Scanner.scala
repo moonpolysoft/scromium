@@ -11,20 +11,20 @@ abstract class Scanner[T](ks : Keyspace,
                  cp : thrift.ColumnParent,
                  predicate : thrift.SlicePredicate,
                  range : thrift.KeyRange,
-                 consistency : ReadConsistency) extends Iterable[(String, Seq[T])] {
+                 consistency : ReadConsistency) extends Iterable[Row[T]] {
   
   def converter : thrift.ColumnOrSuperColumn => T
   
   def iterator = new ScannerIterator[T](converter)
   
-  class ScannerIterator[T](converter : thrift.ColumnOrSuperColumn => T) extends Iterator[(String, Seq[T])] {
+  class ScannerIterator[T](converter : thrift.ColumnOrSuperColumn => T) extends Iterator[Row[T]] {
                              
     private var stream = ScanStream[T](ks, cp, predicate, range, consistency, converter)
     private var iterator = if (!stream.isEmpty) stream.head.iterator else null
     //public api for the iterator
-    def next : (String, Seq[T]) = {
+    def next : Row[T] = {
       if (hasNext) {
-        iterator.next
+        return iterator.next
       }
       throw new NoSuchElementException("8====D")
     }
@@ -36,6 +36,7 @@ abstract class Scanner[T](ks : Keyspace,
           true
         } else {
           stream = stream.tail
+          if (!stream.isEmpty) iterator = stream.head.iterator
           hasNext
         }
       } else {

@@ -50,7 +50,6 @@ class ConnectionFactory(var hosts : Seq[String], val port : Int, socketFactory :
             createSocket(tail)
         }
     }
-    println("trying to create a socket with hosts list " + hosts)
     val socket = createSocket(hosts)
     val first :: tail = hosts
     hosts = tail ++ List(first)

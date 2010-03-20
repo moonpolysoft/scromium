@@ -32,7 +32,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
       
       Keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
-        val results = ks.rangeSlices("cf").keys("start", "finish")!
+        val results = ks.query("cf").keys("start", "finish")!
         
         results must notBeNull
       }
@@ -67,7 +67,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
       
       Keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
-        val results = ks.rangeSlices("cf").keys("start", "finish").columnRange("start_column", "end_column", limit=100)!
+        val results = ks.query("cf").keys("start", "finish").columnRange("start_column", "end_column", limit=100)!
         
         results must notBeNull
       }

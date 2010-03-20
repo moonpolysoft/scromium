@@ -48,7 +48,7 @@ class ColumnQueryBuilder(val ks : Keyspace, val cf : String) extends QueryBuilde
   cp.column_family = cf
   
   def this(ks : Keyspace, cf : String, superColumn : Array[Byte]) {
-    this(ks, cf, superColumn)
+    this(ks, cf)
     cp.super_column = superColumn
   }
   
@@ -67,10 +67,9 @@ class ColumnQueryBuilder(val ks : Keyspace, val cf : String) extends QueryBuilde
   }
 }
 
-class SuperColumnQueryBuilder(val ks : Keyspace, val cf : String, val superColumn : Array[Byte]) extends QueryBuilder {
+class SuperColumnQueryBuilder(val ks : Keyspace, val cf : String) extends QueryBuilder {
   val cp = new thrift.ColumnParent
   cp.column_family = cf
-  cp.super_column = superColumn
   
   def !(implicit consistency : ReadConsistency) : Seq[(String, Seq[GetSuperColumn])] = {
     ks.pool.withConnection { conn => 

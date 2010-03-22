@@ -16,7 +16,9 @@ class GetBuilderSpec extends Specification with Mockito with TestHelper {
       cp.column_family = "cf"
       cp.column = "c".getBytes
       val cons = thrift.ConsistencyLevel.ONE
-      client.get("ks", "row", cp, cons) returns new thrift.ColumnOrSuperColumn
+      val con = new thrift.ColumnOrSuperColumn
+      con.column = new thrift.Column
+      client.get("ks", "row", cp, cons) returns con 
       
       Keyspace("ks") { ks =>
         implicit val consistency = ReadConsistency.One

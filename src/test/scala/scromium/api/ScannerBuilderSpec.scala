@@ -51,14 +51,14 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
         var count = 0
         for (row <- scanner) {
           count += 1
-          row.columns.head.valueAs[String] must ==("value")
+          row.columns.head.valueAs[String] must ==(Some("value"))
         }
         count must ==(16)
       }
       
       client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) was called
-/*      client.get_range_slices("ks", parent, predicate, range2, thrift.ConsistencyLevel.ONE) was called*/
-/*      client.get_range_slices("ks", parent, predicate, range3, thrift.ConsistencyLevel.ONE) was called*/
+      client.get_range_slices("ks", parent, predicate, range2, thrift.ConsistencyLevel.ONE) was called
+      client.get_range_slices("ks", parent, predicate, range3, thrift.ConsistencyLevel.ONE) was called
     }
   }
 }

@@ -8,7 +8,7 @@ import connection.ConnectionPool
 object Keyspace {
   var pool : ConnectionPool = null
   
-  def apply(ksName : String)(block : Keyspace => Any) : Any = {
+  def apply[A](ksName : String)(block : Keyspace => A) : A = {
     if (pool == null) {
       throw new Exception("Cassandra client needs to be started first.")
     }

@@ -67,8 +67,6 @@ class GetSuperColumnScanner(ks : Keyspace,
   }
 }
 
-case class Row[T](val key : String, val columns : Seq[T])
-
 object ScanStream {
   def apply[T](ks : Keyspace,
             cp : thrift.ColumnParent,

@@ -4,6 +4,7 @@ import api._
 import serializers._
 import org.apache.cassandra.thrift
 import connection.ConnectionPool
+import scromium.util.HexString._
 
 object Keyspace {
   var pool : ConnectionPool = null
@@ -20,12 +21,28 @@ object Keyspace {
 class Keyspace(val name : String, val pool : ConnectionPool) {
   def get(row : String, cf : String) = new CFPath(this, row, cf)
   
-  def insert[A, B](row : String, ins : Tuple2[String, A], value : B)
+  /**
+   * Insert using a byte array as the row key and use the default timestmap
+   */
+  def insert[A, B](row : Array[Byte], ins : (String, A), value : B)
+    (implicit cSer : Serializer[A],
+              vSer : Serializer[B],
+              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value)(cSer, vSer, consistency)
+  
+  def insert[A, B](row : String, ins : (String, A), value : B)
     (implicit cSer : Serializer[A],
               vSer : Serializer[B],
               consistency : WriteConsistency) : Unit = insert(row, ins, value, System.currentTimeMillis)(cSer, vSer, consistency)
+  //---------------------------------------------------------------------
   
-  def insert[A, B](row : String, ins : Tuple2[String, A], value : B, timestamp : Long)
+  //---------------------------------------------------------------------
+  //insert with timestamp
+  def insert[A, B](row : Array[Byte], ins : (String, A), value : B, timestamp : Long)
+    (implicit cSer : Serializer[A],
+              vSer : Serializer[B],
+              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value, timestamp)(cSer, vSer, consistency)
+  
+  def insert[A, B](row : String, ins : (String, A), value : B, timestamp : Long)
     (implicit cSer : Serializer[A],
               vSer : Serializer[B],
               consistency : WriteConsistency) {
@@ -37,14 +54,32 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
       conn.client.insert(name, row, columnPath, vSer.serialize(value), timestamp, consistency.thrift)
     }
   }
+  //---------------------------------------------------------------------
   
-  def insert[A, B, C](row : String, ins : Tuple2[Tuple2[String, A], B], value : C)
+  //---------------------------------------------------------------------
+  //supercolumn insert without timestamp
+  def insert[A, B, C](row : Array[Byte], ins : ((String, A), B), value : C)
+    (implicit scSer : Serializer[A],
+              cSer : Serializer[B],
+              vSer : Serializer[C],
+              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value)(scSer, cSer, vSer, consistency)
+  
+  def insert[A, B, C](row : String, ins : ((String, A), B), value : C)
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
               vSer : Serializer[C],
               consistency : WriteConsistency) : Unit = insert(row, ins, value, System.currentTimeMillis)(scSer, cSer, vSer, consistency)
+  //---------------------------------------------------------------------
   
-  def insert[A, B, C](row : String, ins : Tuple2[Tuple2[String, A], B], value : C, timestamp : Long)
+  //---------------------------------------------------------------------
+  //supercolumn insert with timestamp
+  def insert[A, B, C](row : Array[Byte], ins : ((String, A), B), value : C, timestamp : Long)
+    (implicit scSer : Serializer[A],
+              cSer : Serializer[B],
+              vSer : Serializer[C],
+              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value, timestamp)(scSer, cSer, vSer, consistency)
+  
+  def insert[A, B, C](row : String, ins : ((String, A), B), value : C, timestamp : Long)
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
               vSer : Serializer[C],
@@ -58,6 +93,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
       conn.client.insert(name, row, columnPath, vSer.serialize(value), timestamp, consistency.thrift)
     }
   }
+  //---------------------------------------------------------------------
   
   def query(cf : String) = new ColumnQueryBuilder(this, cf)
   
@@ -69,5 +105,6 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
   def scanSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnScanBuilder(this, cf, ser.serialize(superColumn))
   def scanSuper(cf : String) = new SuperColumnScanBuilder(this, cf)
   
+  def batch(row : Array[Byte]) = new BatchBuilder(this, toHexString(row))
   def batch(row : String) = new BatchBuilder(this, row)
 }

@@ -4,9 +4,14 @@ import org.apache.cassandra.thrift
 import scromium._
 import serializers._
 import connection._
+import scromium.util.HexString._
 
 
 case class CFPath(keyspace : Keyspace, row : String, cf : String) {
+  def this(keyspace : Keyspace, row : Array[Byte], cf : String) {
+    this(keyspace, toHexString(row), cf)
+  }
+  
   def /[T](column : T)(implicit serializer : Serializer[T]) = 
     new ColumnPath(this, serializer.serialize(column))
     

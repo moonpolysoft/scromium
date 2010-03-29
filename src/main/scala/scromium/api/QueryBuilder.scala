@@ -5,21 +5,24 @@ import scala.collection.JavaConversions._
 import scala.collection.mutable.HashMap
 import scromium._
 import serializers._
+import scromium.util.HexString._
 
 trait QueryBuilder {
   val predicate = new thrift.SlicePredicate
   val range = new thrift.KeyRange
   
-  def keys(startKey : String, endKey : String, limit : Int = 100) : this.type = {
+  def keys(startKey : Array[Byte], endKey : Array[Byte]) : this.type = 
+    keys(startKey, endKey, 100)
+  
+  def keys(startKey : Array[Byte], endKey : Array[Byte], limit : Int) : this.type =
+    keys(toHexString(startKey), toHexString(endKey), limit)
+  
+  def keys(startKey : String, endKey : String) : this.type =
+    keys(startKey, endKey, 100)
+  
+  def keys(startKey : String, endKey : String, limit : Int) : this.type = {
     range.start_key = startKey
     range.end_key = endKey
-    range.count = limit
-    this
-  }
-  
-  def tokens(startToken : String, endToken : String, limit : Int = 100) : this.type = {
-    range.start_token = startToken
-    range.end_token = endToken
     range.count = limit
     this
   }

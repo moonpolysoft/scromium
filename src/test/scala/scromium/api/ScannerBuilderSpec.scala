@@ -16,8 +16,8 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
       parent.column_family = "cf"
       val predicate = new thrift.SlicePredicate
       val range = new thrift.KeyRange
-      range.start_key = "start"
-      range.end_key = "finish"
+      range.start_key = "row00"
+      range.end_key = "row20"
       range.count = 100
       
       val list = new java.util.ArrayList[thrift.KeySlice]
@@ -25,12 +25,12 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
       val container = new thrift.ColumnOrSuperColumn
       container.column = new thrift.Column("name".getBytes, "value".getBytes, timestamp)
       clist.add(container)
-      Range(0,8).foreach {i => list.add(new thrift.KeySlice("row" + i, clist)) }
+      Range(0,8).foreach {i => list.add(new thrift.KeySlice("row0" + i, clist)) }
       
       client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) returns list
       
       val range2 = range.deepCopy
-      range2.start_key = "row8"
+      range2.start_key = "row08"
       
       val list2 = new java.util.ArrayList[thrift.KeySlice]
       Range(10, 18).foreach {i => list2.add(new thrift.KeySlice("row" + i, clist)) }
@@ -46,7 +46,7 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
       
       Keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
-        val scanner = ks.scan("cf").keys("start", "finish")!
+        val scanner = ks.scan("cf").keys("row00", "row20")!
         
         var count = 0
         for (row <- scanner) {

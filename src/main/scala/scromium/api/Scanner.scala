@@ -67,7 +67,29 @@ class GetSuperColumnScanner(ks : Keyspace,
   }
 }
 
-object ScanStream {
+object ByteArrayOrdering extends Ordering[Array[Byte]] {
+  def compare(a : Array[Byte], b : Array[Byte]) : Int = {
+    var index = 0
+    while (index < a.length && index < a.length) {
+      val comp = a(index) compare b(index)
+      if (comp != 0) return comp
+      index += 1
+    }
+    if (a.length < b.length) return -1
+    if (a.length > b.length) return 1
+    return 0
+  }
+}
+
+object RowOrdering extends Ordering[Row[_]] {
+  def compare(a : Row[_], b : Row[_]) : Int = {
+    val bytesA = a.key.getBytes
+    val bytesB = b.key.getBytes
+    ByteArrayOrdering.compare(bytesA, bytesB)
+  }
+}
+
+object ScanStream extends Log {
   def apply[T](ks : Keyspace,
             cp : thrift.ColumnParent,
             predicate : thrift.SlicePredicate,
@@ -75,20 +97,36 @@ object ScanStream {
             consistency : ReadConsistency,
             converter : thrift.ColumnOrSuperColumn => T) : Stream[Seq[Row[T]]] = {
     ks.pool.withConnection { conn =>
-      val results = conn.client.get_range_slices(ks.name,
-        cp,
-        predicate,
-        range,
-        consistency.thrift)
-        
-      val rows = results.map { slice =>
-        Row(slice.key, slice.columns.map(converter(_)))
-      }
-      
-      if (rows.length == 0) {
+      if (ByteArrayOrdering.compare(range.start_key.getBytes,range.end_key.getBytes) >= 0) {
         Stream.empty
       } else {
-        Stream.cons(rows, apply(ks, cp, predicate, updateRange(range, rows), consistency, converter))
+      
+        val results = conn.client.get_range_slices(ks.name,
+          cp,
+          predicate,
+          range,
+          consistency.thrift)
+        debug("get_range_slices(" + 
+          ks.name + ", " + 
+          cp + ", " + 
+          predicate + ", " + 
+          "KeyRange(start_key:" + rubyStringHex(range.start_key.getBytes) + ",end_key:" + rubyStringHex(range.end_key.getBytes) + ")" + ", " + 
+          consistency.thrift + ")")
+        
+        val rows = results.map { slice =>
+          Row(slice.key, slice.columns.map(converter(_)))
+        }.sortWith(RowOrdering)
+        
+        if (rows.length == 0) {
+          Stream.empty
+        } else {
+          val newRange = updateRange(range, rows)
+          if (null == newRange) {
+            Stream.cons(rows, Stream.empty)
+          } else {
+            Stream.cons(rows, apply(ks, cp, predicate, newRange, consistency, converter))
+          }
+        }
       }
     }
   }
@@ -97,11 +135,30 @@ object ScanStream {
     val range = r.deepCopy
     val lastKey = rows.last.key
     val nextStart = scromium.util.Roll.roll(lastKey)
+    if (nextStart == range.start_key) return null
     if (range.start_key == null) {
       range.start_token = lastKey
     } else {
       range.start_key = nextStart
     }
     range
+  }
+  
+  private def rubyStringHex(ary : Seq[Byte]) : String = {
+    val buff = new StringBuilder
+    for (b <- ary) {
+      if (b >= 33 && b <= 126) {
+        buff += b
+      } else {
+        var str = (b.toLong & 0xff).toOctalString
+        if (str.length == 2) {
+          str = "0" + str
+        } else if (str.length == 1) {
+          str = "00" + str
+        }
+        buff ++= ("\\" + str)
+      }
+    }
+    buff.toString
   }
 }

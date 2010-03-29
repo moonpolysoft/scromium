@@ -4,6 +4,7 @@ import org.apache.commons.pool._
 import org.apache.commons.pool.impl._
 import java.io._
 import scromium.util.JSON
+import scromium.util.Log
 
 object ConnectionPool {
   private val default = Map("host" -> "localhost", 
@@ -58,7 +59,7 @@ class ConcreteConnectionPool(val seedHost : String,
     val maxIdle : Int, 
     val initCapacity : Int, 
     socketFactory : SocketFactory = new SocketFactory, 
-    clusterDiscovery : ClusterDiscovery = new ClusterDiscovery) extends ConnectionPool {
+    clusterDiscovery : ClusterDiscovery = new ClusterDiscovery) extends ConnectionPool with Log {
   
   val hosts = clusterDiscovery.hosts(seedHost,seedPort)
   val objectPool = new StackObjectPool(new ConnectionFactory(hosts, seedPort, socketFactory), maxIdle, initCapacity)
@@ -69,7 +70,8 @@ class ConcreteConnectionPool(val seedHost : String,
       connection = borrow
       block(connection)
     } catch {
-      case ex : Throwable => ex.printStackTrace
+      case ex : Throwable =>
+        error("Error while trying to use connection", ex)
         throw ex
     } finally {
       if (connection != null) returnConnection(connection)

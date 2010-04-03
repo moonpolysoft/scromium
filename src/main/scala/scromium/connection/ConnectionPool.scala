@@ -6,7 +6,7 @@ import java.io._
 import scromium.util.JSON
 import scromium.util.Log
 
-object ConnectionPool with Log {
+object ConnectionPool extends Log {
   private val default = Map("host" -> "localhost", 
     "port" -> 9160, 
     "maxIdle" -> 10, 

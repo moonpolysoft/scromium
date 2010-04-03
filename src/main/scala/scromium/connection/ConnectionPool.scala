@@ -6,7 +6,7 @@ import java.io._
 import scromium.util.JSON
 import scromium.util.Log
 
-object ConnectionPool {
+object ConnectionPool with Log {
   private val default = Map("host" -> "localhost", 
     "port" -> 9160, 
     "maxIdle" -> 10, 
@@ -31,8 +31,11 @@ object ConnectionPool {
       val filePath = env.get("SCROMIUM_CONF")
       val file = new File(filePath, "cassandra.json")
       if (file.isFile) {
-        JSON.parseObject(readFile(file))
+        val json = readFile(file)
+        info("config " + json)
+        JSON.parseObject(json)
       } else {
+        info("config file " + file + " does not exist")
         default
       }
     } catch {
@@ -42,9 +45,13 @@ object ConnectionPool {
   
   private def readFile(file : File) : String = {
     val reader = new BufferedReader(new FileReader(file))
-    val line = reader.readLine
+    val builder = new StringBuilder
+    var line = null
+    while ((line = reader.readLine) != null) {
+      builder ++= line
+    }
     reader.close
-    line
+    builder.toString
   }
 }
 

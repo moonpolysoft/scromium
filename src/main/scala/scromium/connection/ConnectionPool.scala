@@ -44,14 +44,18 @@ object ConnectionPool extends Log {
   }
   
   private def readFile(file : File) : String = {
+    def readAll(reader : BufferedReader, acc : String) : String = {
+      reader.readLine match {
+        case v : String => readAll(reader, acc + v)
+        case _ => acc
+      }
+    }
+    
     val reader = new BufferedReader(new FileReader(file))
     val builder = new StringBuilder
-    var line = null
-    while ((line = reader.readLine) != null) {
-      builder ++= line
-    }
+    val contents = readAll(reader, "")
     reader.close
-    builder.toString
+    contents
   }
 }
 

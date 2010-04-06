@@ -61,12 +61,10 @@ object ConnectionPool extends Log {
 
 trait ConnectionPool {
   def withConnection[T](block : Connection => T) : T
-  def borrow : Connection
-  def returnConnection(conn : Connection)
 }
 
 class ConcreteConnectionPool(val seedHost : String, 
-    val seedPort : Int, 
+    val seedPort : Int,
     val maxIdle : Int, 
     val initCapacity : Int, 
     socketFactory : SocketFactory = new SocketFactory, 

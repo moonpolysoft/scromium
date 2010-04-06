@@ -11,9 +11,6 @@ trait TestHelper extends Mockito {
       def withConnection[T](block : Connection => T) : T = {
         block(conn)
       }
-      
-      def borrow = conn
-      def returnConnection(conn : Connection) {}
     }
   }
   

@@ -50,9 +50,11 @@ class ConnectionFactory(var hosts : Seq[String], val port : Int, socketFactory :
             createSocket(tail)
         }
     }
-    val socket = createSocket(hosts)
-    val first :: tail = hosts
-    hosts = tail ++ List(first)
-    socket
+    synchronized {
+      val socket = createSocket(hosts)
+      val first :: tail = hosts
+      hosts = tail ++ List(first)
+      socket
+    }
   }
 }

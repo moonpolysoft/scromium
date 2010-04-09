@@ -51,10 +51,10 @@ class BatchBuilder(ks : Keyspace) extends Log {
     }
   }
 
-  def row(row : Array[Byte])(block : RowBatchBuilder => Unit)  {
+  def row[R](row : Array[Byte])(block : RowBatchBuilder => R)  {
     this.row(toHexString(row))(block)
   }  
-  def row(row : String)(block : RowBatchBuilder => Unit) {
+  def row[R](row : String)(block : RowBatchBuilder => R) {
     val builder = new RowBatchBuilder
     block(builder)
     val muteMap = builder.toMap

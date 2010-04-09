@@ -105,6 +105,5 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
   def scanSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnScanBuilder(this, cf, ser.serialize(superColumn))
   def scanSuper(cf : String) = new SuperColumnScanBuilder(this, cf)
   
-  def batch(row : Array[Byte]) = new BatchBuilder(this, toHexString(row))
-  def batch(row : String) = new BatchBuilder(this, row)
+  def batch() = new BatchBuilder(this)
 }

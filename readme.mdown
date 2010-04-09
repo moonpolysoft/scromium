@@ -31,6 +31,14 @@ The way shit is supposed to work:
       ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.One)
       
       //batches can be built up a little at a time before being executed
+      val batch = ks.batch
+      
+      batch -> "row" { row =>
+        row.add("cf" -> "sc" -> "c", value)
+      }
+      
+      batch!
+      
       val batch = ks.batch("row")
       batch.add("cf" -> "supercolumn" -> "column", value, timestamp)
       batch ! WriteConsistency.One

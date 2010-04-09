@@ -79,7 +79,7 @@ abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
     this
   }
   
-  protected def execute[A <: Container](consistency : ReadConsistency)(implicit fac : ContainerFactory[A]) : Seq[(String, Seq[A])] = {
+  protected def execute[A <: Container](consistency : ReadConsistency)(implicit fac : ContainerFactory[A]) : Map[String, Seq[A]] = {
     if (null == predicate.slice_range && null == predicate.column_names) {
       predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
     }
@@ -92,7 +92,7 @@ abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
         
       results.map { ks =>
         (ks.key, ks.columns.map{ container => fac.make(container)})
-      }
+      }.toMap
     }
   }
 }

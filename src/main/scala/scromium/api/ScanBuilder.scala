@@ -4,9 +4,7 @@ import org.apache.cassandra.thrift
 import scromium._
 import serializers._
 
-class ColumnScanBuilder(val ks : Keyspace, val cf : String) extends QueryBuilder {
-  val cp = new thrift.ColumnParent
-  cp.column_family = cf
+class ColumnScanBuilder(val ks : Keyspace, val cf : String) extends RangeQueryBuilder(ks, cf) {
   
   def this(ks : Keyspace, cf : String, superColumn : Array[Byte]) {
     this(ks, cf)
@@ -18,9 +16,7 @@ class ColumnScanBuilder(val ks : Keyspace, val cf : String) extends QueryBuilder
   }
 }
 
-class SuperColumnScanBuilder(val ks : Keyspace, cf : String) extends QueryBuilder {
-  val cp = new thrift.ColumnParent
-  cp.column_family = cf
+class SuperColumnScanBuilder(val ks : Keyspace, cf : String) extends RangeQueryBuilder(ks, cf) {
   
   def !(implicit consistency : ReadConsistency) : GetSuperColumnScanner = {
     new GetSuperColumnScanner(ks, cp, predicate, range, consistency)

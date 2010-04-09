@@ -31,10 +31,14 @@ class CommonsConnectionPool(val seedHost : String,
   }
   
   def borrow : Connection = {
-    objectPool.borrowObject.asInstanceOf[Connection]
+    synchronized {
+      objectPool.borrowObject.asInstanceOf[Connection]
+    }
   }
   
   def returnConnection(conn : Connection) {
-    objectPool.returnObject(conn)
+    synchronized {
+      objectPool.returnObject(conn)
+    }
   }
 }

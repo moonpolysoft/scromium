@@ -6,26 +6,14 @@ import scala.collection.mutable.HashMap
 import scromium._
 import serializers._
 import scromium.util.HexString._
+import ContainerFactory._
+import scromium.util.Thrift._
 
-trait QueryBuilder {
+abstract class QueryBuilder(ks : Keyspace, cf : String) {
+  val cp = new thrift.ColumnParent
+  cp.column_family = cf
+  
   val predicate = new thrift.SlicePredicate
-  val range = new thrift.KeyRange
-  
-  def keys(startKey : Array[Byte], endKey : Array[Byte]) : this.type = 
-    keys(startKey, endKey, 100)
-  
-  def keys(startKey : Array[Byte], endKey : Array[Byte], limit : Int) : this.type =
-    keys(toHexString(startKey), toHexString(endKey), limit)
-  
-  def keys(startKey : String, endKey : String) : this.type =
-    keys(startKey, endKey, 100)
-  
-  def keys(startKey : String, endKey : String, limit : Int) : this.type = {
-    range.start_key = startKey
-    range.end_key = endKey
-    range.count = limit
-    this
-  }
   
   def columns[A](columns : A*)(implicit ser : Serializer[A]) : this.type = {
     if (predicate.column_names == null) {
@@ -46,16 +34,55 @@ trait QueryBuilder {
   }
 }
 
-class ColumnQueryBuilder(val ks : Keyspace, val cf : String) extends QueryBuilder {
-  val cp = new thrift.ColumnParent
-  cp.column_family = cf
+abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilder(ks, cf) {
+  val keys = new java.util.ArrayList[String]
   
-  def this(ks : Keyspace, cf : String, superColumn : Array[Byte]) {
-    this(ks, cf)
-    cp.super_column = superColumn
+  def keys(ks : String*) : this.type = {
+    ks.foreach { k => keys.add(k) }
+    this
   }
   
-  def !(implicit consistency : ReadConsistency) : Seq[(String, Seq[GetColumn])] = {
+  protected def execute[A <: Container](consistency : ReadConsistency)(implicit fac : ContainerFactory[A]) : Map[String, Seq[A]] = {
+    if (null == predicate.slice_range && null == predicate.column_names) {
+      predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
+    }
+    ks.pool.withConnection { conn => 
+      val results = conn.client.multiget_slice(ks.name,
+        keys,
+        cp,
+        predicate,
+        consistency.thrift)
+        
+      results.map { case (key, columns) =>
+        (key, columns.map{ container => fac.make(container)})
+      }.toMap
+    }
+  }
+}
+
+abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilder(ks, cf) {
+  val range = new thrift.KeyRange
+  
+  def keys(startKey : Array[Byte], endKey : Array[Byte]) : this.type = 
+    keys(startKey, endKey, 100)
+  
+  def keys(startKey : Array[Byte], endKey : Array[Byte], limit : Int) : this.type =
+    keys(toHexString(startKey), toHexString(endKey), limit)
+  
+  def keys(startKey : String, endKey : String) : this.type =
+    keys(startKey, endKey, 100)
+  
+  def keys(startKey : String, endKey : String, limit : Int) : this.type = {
+    range.start_key = startKey
+    range.end_key = endKey
+    range.count = limit
+    this
+  }
+  
+  protected def execute[A <: Container](consistency : ReadConsistency)(implicit fac : ContainerFactory[A]) : Seq[(String, Seq[A])] = {
+    if (null == predicate.slice_range && null == predicate.column_names) {
+      predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
+    }
     ks.pool.withConnection { conn =>
       val results = conn.client.get_range_slices(ks.name,
         cp,
@@ -64,27 +91,38 @@ class ColumnQueryBuilder(val ks : Keyspace, val cf : String) extends QueryBuilde
         consistency.thrift)
         
       results.map { ks =>
-        (ks.key, ks.columns.map{ container => new GetColumn(container.column)})
+        (ks.key, ks.columns.map{ container => fac.make(container)})
       }
     }
   }
 }
 
-class SuperColumnQueryBuilder(val ks : Keyspace, val cf : String) extends QueryBuilder {
-  val cp = new thrift.ColumnParent
-  cp.column_family = cf
+class ColumnRangeQueryBuilder(ks : Keyspace, cf : String) extends RangeQueryBuilder(ks, cf) {
   
-  def !(implicit consistency : ReadConsistency) : Seq[(String, Seq[GetSuperColumn])] = {
-    ks.pool.withConnection { conn => 
-      val results = conn.client.get_range_slices(ks.name,
-        cp,
-        predicate,
-        range,
-        consistency.thrift)
-      
-      results.map { ks =>
-        (ks.key, ks.columns.map{ container => new GetSuperColumn(container.super_column)})
-      }
-    }
+  def this(ks : Keyspace, cf : String, superColumn : Array[Byte]) {
+    this(ks, cf)
+    cp.super_column = superColumn
   }
+  
+  def !(implicit consistency : ReadConsistency) = execute[GetColumn](consistency)
+}
+
+class SuperColumnRangeQueryBuilder(ks : Keyspace, cf : String) extends RangeQueryBuilder(ks, cf) {
+  
+  def !(implicit consistency : ReadConsistency) = execute[GetSuperColumn](consistency)
+}
+
+class ColumnMultiQueryBuilder(ks : Keyspace, cf : String) extends MultiQueryBuilder(ks, cf) {
+  
+  def this(ks : Keyspace, cf : String, superColumn : Array[Byte]) {
+    this(ks, cf)
+    cp.super_column = superColumn
+  }
+  
+  def !(implicit consistency : ReadConsistency) = execute[GetColumn](consistency)
+}
+
+class SuperColumnMultiQueryBuilder(ks : Keyspace, cf : String) extends MultiQueryBuilder(ks, cf) {
+  
+  def !(implicit consistency : ReadConsistency) = execute[GetSuperColumn](consistency)
 }

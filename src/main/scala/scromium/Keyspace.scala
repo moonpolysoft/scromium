@@ -95,10 +95,15 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
   }
   //---------------------------------------------------------------------
   
-  def query(cf : String) = new ColumnQueryBuilder(this, cf)
+  def range(cf : String) = new ColumnRangeQueryBuilder(this, cf)
   
-  def querySuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnQueryBuilder(this, cf, ser.serialize(superColumn))
-  def querySuper(cf : String) = new SuperColumnQueryBuilder(this, cf)
+  def rangeSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnRangeQueryBuilder(this, cf, ser.serialize(superColumn))
+  def rangeSuper(cf : String) = new SuperColumnRangeQueryBuilder(this, cf)
+  
+  def multiget(cf : String) = new ColumnMultiQueryBuilder(this, cf)
+  
+  def multigetSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnMultiQueryBuilder(this, cf, ser.serialize(superColumn))
+  def multigetSuper(cf : String) = new SuperColumnMultiQueryBuilder(this, cf)
   
   def scan(cf : String) = new ColumnScanBuilder(this, cf)
   

@@ -135,6 +135,8 @@ class ConnectionPoolSpec extends Specification with Mockito {
       
       val connPool = new ActorConnectionPool("10.10.10.10", 9160, 3, socketFactory, clusterDiscovery)
       
+      Thread.sleep(50)
+      
       theMethod(socketFactory.make("127.0.0.1", 9160)).on(socketFactory) then
       theMethod(socketFactory.make("192.168.0.1", 9160)).on(socketFactory) then
       theMethod(socketFactory.make("127.0.0.1", 9160)).on(socketFactory) were

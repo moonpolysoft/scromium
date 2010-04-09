@@ -15,12 +15,12 @@ import scromium.util.Thrift._
 class BatchBuilderSpec extends Specification with Mockito with TestHelper {
   "BatchBuilder" should {
     "execute a batch_insert with a super column" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(superColumnMutation("sc".getBytes, ("c".getBytes, "value".getBytes, timestamp)))
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
         val batch = ks.batch
         batch.row("row") { row =>
@@ -33,12 +33,12 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
     }
     
     "execute a batch_insert with a single column" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(columnMutation("c".getBytes, "value".getBytes, timestamp))
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
         val batch = ks.batch
         batch.row("row") { row =>
@@ -51,7 +51,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
     }
         
     "pick the right serializer" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(columnMutation("c".getBytes, Array[Byte](0), timestamp))
@@ -64,7 +64,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         def deserialize(ary : Array[Byte]) = new Fuck
       }
   
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
         val batch = ks.batch
         batch.row("row") { row =>
@@ -77,7 +77,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
     }
         
     "pick a covariant serializer" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(columnMutation("c".getBytes, Array[Byte](0), timestamp))
@@ -92,7 +92,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         def deserialize(ary : Array[Byte]) : Balls = new Fuck
       }
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
         val batch = ks.batch
         batch.row("row") { row =>

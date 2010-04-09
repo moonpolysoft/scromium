@@ -101,7 +101,7 @@ object ScanStream extends Log {
         Stream.empty
       } else {
       
-        val results = conn.client.get_range_slices(ks.name,
+        val results = conn.get_range_slices(ks.name,
           cp,
           predicate,
           range,

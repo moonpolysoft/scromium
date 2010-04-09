@@ -91,7 +91,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       
       
       connection must notBeNull
-      connection.isOpen must beTrue
+      connection.asInstanceOf[Connection].isOpen must beTrue
     }
     
     "handle down hosts" in {
@@ -108,7 +108,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       var connection = connPool.withConnection { c => c }
       
       connection must notBeNull
-      connection.isOpen must beTrue
+      connection.asInstanceOf[Connection].isOpen must beTrue
     }
     
     "throw an error if all hosts are down" in {
@@ -158,7 +158,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       val connPool = new ActorConnectionPool("10.10.10.10", 9160, 1, socketFactory, clusterDiscovery)
       
       connPool.withConnection { conn => 
-        conn.socket.flush
+        conn.asInstanceOf[Connection].socket.flush
       }
       
       badSocket.flush was called

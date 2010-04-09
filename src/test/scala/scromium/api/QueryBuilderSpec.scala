@@ -12,7 +12,7 @@ import scromium.util.Thrift._
 class QueryBuilderSpec extends Specification with Mockito with TestHelper {
   "QueryBuilder" should {
     "execute get_range_slices for a normal column family and only a key range" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val parent = new thrift.ColumnParent("cf")
       val predicate = slicePredicate("".getBytes, "".getBytes,100)
@@ -25,7 +25,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
       
       client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) returns list 
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
         val results = ks.range("cf").keys("start", "finish")!
         
@@ -36,7 +36,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
     }
     
     "execute get_range_slices for a normal column family with column ranges and key ranges" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val parent = new thrift.ColumnParent
       parent.column_family = "cf"
@@ -60,7 +60,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
       
       client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) returns list
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
         val results = ks.range("cf").keys("start", "finish").columnRange("start_column", "end_column", limit=100)!
         
@@ -71,7 +71,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
     }
     
     "execute multiget_slice for a normal column family with a null column list" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val parent = new thrift.ColumnParent("cf")
       val predicate = slicePredicate("".getBytes, "".getBytes, 100)
@@ -87,7 +87,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
       
       client.multiget_slice("ks", keyList, parent, predicate, thrift.ConsistencyLevel.ONE) returns map.asInstanceOf[java.util.Map[String, java.util.List[thrift.ColumnOrSuperColumn]]]
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
         val results = ks.multiget("cf").keys("row")!
         

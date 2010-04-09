@@ -5,7 +5,7 @@ import org.apache.thrift.transport.TTransportException
 import java.io.IOException
 import scromium.util.Log
 
-class ActorConnection(connectionFactory : ConnectionFactory) extends ActorBehavior[Function[Connection,Any],Any] with Log {
+class ActorConnection(connectionFactory : ConnectionFactory) extends ActorBehavior[Function[Client,Any],Any] with Log {
   var connection : Connection = null
   
   override def onStart() {
@@ -18,7 +18,7 @@ class ActorConnection(connectionFactory : ConnectionFactory) extends ActorBehavi
     }
   }
   
-  def onMessage(block : Connection => Any) : Any = {
+  def onMessage(block : Client => Any) : Any = {
     try {
       if (connection == null) connection = connectionFactory.make
       block(connection)
@@ -33,7 +33,7 @@ class ActorConnection(connectionFactory : ConnectionFactory) extends ActorBehavi
   }
 }
 
-class ActorConnectionFactory(connectionFactory : ConnectionFactory) extends ActorFactory[Function[Connection,Any],Any,ActorConnection] {
+class ActorConnectionFactory(connectionFactory : ConnectionFactory) extends ActorFactory[Function[Client,Any],Any,ActorConnection] {
   def createActor() : ActorConnection = {
     new ActorConnection(connectionFactory)
   }
@@ -54,7 +54,7 @@ class ActorConnectionPool(val seedHost : String,
    * The price we pay for decoupling is losing type information to the actor.
    * So we do a cast here back in and out
    */
-  def withConnection[T](block : Connection => T) : T = {
+  def withConnection[T](block : Client => T) : T = {
     actorPool.call(block).asInstanceOf[T]
   }
 }

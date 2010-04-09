@@ -7,21 +7,21 @@ import java.io._
 import scromium.util.JSON
 
 object Cassandra extends Log {
-  def start(file : String) {
+  def start(file : String) : Cassandra = {
     val config = getConfig(new File(file))
     start(config)
   }
   
-  def start(map : Map[String, Any]) {
-    Keyspace.pool = createConnectionPool(map)
-  }
-  
-  def start() {    
+  def start() : Cassandra = {    
     val env = System.getenv
     val filePath = env.get("SCROMIUM_CONF")
     val file = new File(filePath, "cassandra.json")
     val config = getConfig(file)
     start(config)
+  }
+  
+  def start(map : Map[String, Any]) : Cassandra = {
+    new Cassandra(createConnectionPool(map))
   }
   
   private val default = Map("host" -> "localhost", 
@@ -66,4 +66,9 @@ object Cassandra extends Log {
     reader.close
     contents
   }
+}
+
+
+class Cassandra(connPool : ConnectionPool) {
+  def keyspace(name : String) = new Keyspace(name, connPool)
 }

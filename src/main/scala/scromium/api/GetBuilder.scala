@@ -25,7 +25,7 @@ case class ColumnPath(cfpath : CFPath, column : Array[Byte]) {
       val thriftCP = new thrift.ColumnPath
       thriftCP.column_family = cfpath.cf
       thriftCP.column = column
-      val result = connection.client.get(cfpath.keyspace.name, 
+      val result = connection.get(cfpath.keyspace.name, 
         cfpath.row,
         thriftCP,
         consistency.thrift)
@@ -40,7 +40,7 @@ case class SuperColumnPath(cfpath : CFPath, superColumn : Array[Byte]) {
       val thriftCP = new thrift.ColumnPath
       thriftCP.column_family = cfpath.cf
       thriftCP.super_column = superColumn
-      val result = connection.client.get(cfpath.keyspace.name,
+      val result = connection.get(cfpath.keyspace.name,
         cfpath.row,
         thriftCP,
         consistency.thrift)

@@ -47,7 +47,7 @@ class BatchBuilder(ks : Keyspace) extends Log {
       m
     }
     ks.pool.withConnection { conn =>
-      conn.client.batch_mutate(ks.name, map.asInstanceOf[JOpMap], consistency.thrift)
+      conn.batch_mutate(ks.name, map.asInstanceOf[JOpMap], consistency.thrift)
     }
   }
 

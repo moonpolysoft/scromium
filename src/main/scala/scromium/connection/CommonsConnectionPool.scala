@@ -16,7 +16,7 @@ class CommonsConnectionPool(val seedHost : String,
   val hosts = clusterDiscovery.hosts(seedHost,seedPort)
   val objectPool = new StackObjectPool(new ConnectionFactory(hosts, seedPort, socketFactory), maxIdle, initCapacity)
   
-  def withConnection[T](block : Connection => T) : T = {
+  def withConnection[T](block : Client => T) : T = {
     var connection : Connection = null
     try {
       connection = borrow

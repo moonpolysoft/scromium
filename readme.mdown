@@ -3,9 +3,9 @@ Scromium
 
 The way shit is supposed to work:
 
-    Cassandra.start
+    val cassandra = Cassandra.start
     
-    Keyspace("fuck") { ks =>
+    cassandra.keyspace("fuck") { ks =>
       implicit val consistency = ReadConsistency.One
       
       //get uses the % operator to denote a supercolumn when chaining paths together

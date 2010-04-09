@@ -47,7 +47,7 @@ abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
       predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
     }
     ks.pool.withConnection { conn => 
-      val results = conn.client.multiget_slice(ks.name,
+      val results = conn.multiget_slice(ks.name,
         keys,
         cp,
         predicate,
@@ -84,7 +84,7 @@ abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
       predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
     }
     ks.pool.withConnection { conn =>
-      val results = conn.client.get_range_slices(ks.name,
+      val results = conn.get_range_slices(ks.name,
         cp,
         predicate,
         range,

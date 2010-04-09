@@ -10,7 +10,7 @@ import scromium.serializers.Serializers._
 class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
   "ScannerBuilder" should {
     "execute a scan for a normal column family with only one section returned" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val timestamp = System.currentTimeMillis
       val parent = new thrift.ColumnParent
       parent.column_family = "cf"
@@ -44,7 +44,7 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
       
       client.get_range_slices("ks", parent, predicate, range3, thrift.ConsistencyLevel.ONE) returns list3
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = ReadConsistency.One
         val scanner = ks.scan("cf").keys("row00", "row20")!
         

@@ -4,7 +4,7 @@ import org.apache.cassandra.thrift
 import scromium.serializers._
 import scala.collection.JavaConversions._
 
-case class GetSuperColumn(val name : Array[Byte], val columns : Seq[GetColumn]) extends Iterable[GetColumn] {
+case class GetSuperColumn(val name : Array[Byte], val columns : Seq[GetColumn]) extends Iterable[GetColumn] with Container {
   def this(superColumn : thrift.SuperColumn) {
     this(superColumn.name, superColumn.columns.map(new GetColumn(_)))
   }

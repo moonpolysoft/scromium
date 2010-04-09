@@ -6,7 +6,7 @@ import org.apache.cassandra.thrift
 /**
  * Represents the result of a single column get operation.
  */
-case class GetColumn(val name : Array[Byte], val value : Array[Byte], val timestamp : Long) {
+case class GetColumn(val name : Array[Byte], val value : Array[Byte], val timestamp : Long) extends Container {
   def this(column : thrift.Column) {
     this(column.name, column.value, column.timestamp)
   }

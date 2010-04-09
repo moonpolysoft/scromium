@@ -36,8 +36,6 @@ class BatchBuilder(ks : Keyspace) extends Log {
   val operations = new OpMap
   
   def !(implicit consistency : WriteConsistency) {
-    info("operations " + operations)
-    
     val map = operations.foldLeft(new HOpMap) { (m , tuple) =>
       val(rowKey, cfMap) = tuple
       val mutationMap = cfMap.foldLeft(new HMuteMap) { (m, tuple) =>

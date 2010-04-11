@@ -24,6 +24,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
     block(this)
   }
   
+  def get(row : Array[Byte], cf : String) = new CFPath(this, toHexString(row), cf)
   def get(row : String, cf : String) = new CFPath(this, row, cf)
   
   /**

@@ -13,6 +13,6 @@ case class GetSuperColumn(val name : Array[Byte], val columns : Seq[GetColumn]) 
     this(result.super_column)
   }
   
-  def nameAs[T](deserializer : Deserializer[T]) = deserializer.deserialize(name)
+  def nameAs[T](implicit deserializer : Deserializer[T]) = deserializer.deserialize(name)
   def iterator = columns.iterator
 }

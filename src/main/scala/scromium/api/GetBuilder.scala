@@ -34,7 +34,10 @@ case class ColumnPath(cfpath : CFPath, column : Array[Byte]) {
   }
 }
 
-case class SuperColumnPath(cfpath : CFPath, superColumn : Array[Byte]) {
+case class SuperColumnPath(val cfpath : CFPath, val superColumn : Array[Byte]) {
+  def /[T](column : T)(implicit serializer : Serializer[T]) =
+    new FullPath(this, serializer.serialize(column))
+  
   def !(implicit consistency : ReadConsistency) : GetSuperColumn = {
     cfpath.keyspace.pool.withConnection { connection => 
       val thriftCP = new thrift.ColumnPath
@@ -45,6 +48,22 @@ case class SuperColumnPath(cfpath : CFPath, superColumn : Array[Byte]) {
         thriftCP,
         consistency.thrift)
       new GetSuperColumn(result)
+    }
+  }
+}
+
+case class FullPath(path : SuperColumnPath, column : Array[Byte]) {
+  def !(implicit consistency : ReadConsistency) : GetColumn = {
+    path.cfpath.keyspace.pool.withConnection { connection =>
+      val thriftCP = new thrift.ColumnPath
+      thriftCP.column_family = path.cfpath.cf
+      thriftCP.super_column = path.superColumn
+      thriftCP.column = column
+      val result = connection.get(path.cfpath.keyspace.name,
+        path.cfpath.row,
+        thriftCP,
+        consistency.thrift)
+      new GetColumn(result)
     }
   }
 }

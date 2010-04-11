@@ -29,6 +29,7 @@ abstract class QueryBuilder(ks : Keyspace, cf : String) {
     }
     predicate.slice_range.start = startSer.serialize(startColumn)
     predicate.slice_range.finish = endSer.serialize(endColumn)
+    predicate.slice_range.reversed = reversed
     predicate.slice_range.count = limit
     this
   }

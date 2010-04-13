@@ -5,6 +5,7 @@ import serializers._
 import org.apache.cassandra.thrift
 import connection.ConnectionPool
 import scromium.util.HexString._
+import scromium.util.Log
 
 /*object Keyspace {
   var pool : ConnectionPool = null
@@ -18,7 +19,7 @@ import scromium.util.HexString._
   }
 }*/
 
-class Keyspace(val name : String, val pool : ConnectionPool) {
+class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
   
   def apply[A](block : Keyspace => A) : A = {
     block(this)
@@ -57,6 +58,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
       val columnPath = new thrift.ColumnPath
       columnPath.column_family = cf
       columnPath.column = cSer.serialize(c)
+      debug { "insert(" + name + ", " + row + ", " + columnPath + ", " + vSer.serialize(value) + ")" }
       conn.insert(name, row, columnPath, vSer.serialize(value), timestamp, consistency.thrift)
     }
   }
@@ -96,6 +98,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) {
       columnPath.column_family = cf
       columnPath.super_column = scSer.serialize(sc)
       columnPath.column = cSer.serialize(c)
+      debug {"insert(" + name + ", " + row + ", " + columnPath + ", " + vSer.serialize(value) + ", " + timestamp + ", " + consistency.thrift + ")"}
       conn.insert(name, row, columnPath, vSer.serialize(value), timestamp, consistency.thrift)
     }
   }

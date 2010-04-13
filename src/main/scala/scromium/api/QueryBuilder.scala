@@ -8,6 +8,7 @@ import serializers._
 import scromium.util.HexString._
 import ContainerFactory._
 import scromium.util.Thrift._
+import scromium.util.Log
 
 abstract class QueryBuilder(ks : Keyspace, cf : String) {
   val cp = new thrift.ColumnParent
@@ -35,7 +36,7 @@ abstract class QueryBuilder(ks : Keyspace, cf : String) {
   }
 }
 
-abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilder(ks, cf) {
+abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilder(ks, cf) with Log {
   val keys = new java.util.ArrayList[String]
   
   def keys(ks : String*) : this.type = {
@@ -47,7 +48,8 @@ abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
     if (null == predicate.slice_range && null == predicate.column_names) {
       predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
     }
-    ks.pool.withConnection { conn => 
+    ks.pool.withConnection { conn =>
+      debug("multiget_slice(" + ks.name + ", " + keys + ", " + cp + ", " + predicate + ", " + consistency.thrift + ")")
       val results = conn.multiget_slice(ks.name,
         keys,
         cp,
@@ -61,7 +63,7 @@ abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
   }
 }
 
-abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilder(ks, cf) {
+abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilder(ks, cf) with Log {
   val range = new thrift.KeyRange
   
   def keys(startKey : Array[Byte], endKey : Array[Byte]) : this.type = 
@@ -85,6 +87,7 @@ abstract class RangeQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
       predicate.slice_range = sliceRange("".getBytes, "".getBytes, 100)
     }
     ks.pool.withConnection { conn =>
+      debug("get_range_slices(" + ks.name + ", " + cp + ", " + predicate + ", " + range + ", " + consistency.thrift + ")")
       val results = conn.get_range_slices(ks.name,
         cp,
         predicate,

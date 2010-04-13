@@ -3,6 +3,7 @@ package scromium.api
 import org.apache.cassandra.thrift
 import scromium.serializers._
 import scala.collection.JavaConversions._
+import org.apache.commons.codec.binary.Hex
 
 case class GetSuperColumn(val name : Array[Byte], val columns : Seq[GetColumn]) extends Iterable[GetColumn] with Container {
   def this(superColumn : thrift.SuperColumn) {
@@ -15,4 +16,8 @@ case class GetSuperColumn(val name : Array[Byte], val columns : Seq[GetColumn]) 
   
   def nameAs[T](implicit deserializer : Deserializer[T]) = deserializer.deserialize(name)
   def iterator = columns.iterator
+  
+  override def toString() : String = {
+    "GetSuperColumn(" + Hex.encodeHexString(name) + "," + columns + ")"
+  }
 }

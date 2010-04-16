@@ -100,7 +100,6 @@ object ScanStream extends Log {
       if (ByteArrayOrdering.compare(range.start_key.getBytes,range.end_key.getBytes) >= 0) {
         Stream.empty
       } else {
-      
         val results = conn.get_range_slices(ks.name,
           cp,
           predicate,

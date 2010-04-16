@@ -39,7 +39,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
   def insert[A, B](row : String, ins : (String, A), value : B)
     (implicit cSer : Serializer[A],
               vSer : Serializer[B],
-              consistency : WriteConsistency) : Unit = insert(row, ins, value, System.currentTimeMillis)(cSer, vSer, consistency)
+              consistency : WriteConsistency) : Unit = insert(row, ins, value, System.nanoTime)(cSer, vSer, consistency)
   //---------------------------------------------------------------------
   
   //---------------------------------------------------------------------
@@ -76,7 +76,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
               vSer : Serializer[C],
-              consistency : WriteConsistency) : Unit = insert(row, ins, value, System.currentTimeMillis)(scSer, cSer, vSer, consistency)
+              consistency : WriteConsistency) : Unit = insert(row, ins, value, System.nanoTime)(scSer, cSer, vSer, consistency)
   //---------------------------------------------------------------------
   
   //---------------------------------------------------------------------

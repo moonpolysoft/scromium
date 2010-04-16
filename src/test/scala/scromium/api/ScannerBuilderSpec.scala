@@ -11,7 +11,7 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
   "ScannerBuilder" should {
     "execute a scan for a normal column family with only one section returned" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.currentTimeMillis
+      val timestamp = System.nanoTime
       val parent = new thrift.ColumnParent
       parent.column_family = "cf"
       val predicate = new thrift.SlicePredicate

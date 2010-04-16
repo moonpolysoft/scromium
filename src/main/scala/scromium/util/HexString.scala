@@ -1,5 +1,7 @@
 package scromium.util
 
+import org.apache.commons.codec.binary.Hex
+
 object HexString {
   def toHexString(ary : Array[Byte]) : String = {
     val builder = new StringBuilder
@@ -12,5 +14,9 @@ object HexString {
       }
     }
     builder.toString
+  }
+  
+  def toBytes(hex : String) : Array[Byte] = {
+    Hex.decodeHex(hex.toArray)
   }
 }

@@ -2,8 +2,9 @@ package scromium.connection
 
 import org.apache.commons.pool._
 import org.apache.thrift.transport.{TSocket, TTransportException}
+import scromium.util.Log
 
-class ConnectionFactory(var hosts : Seq[String], val port : Int, socketFactory : SocketFactory) extends PoolableObjectFactory {
+class ConnectionFactory(var hosts : Seq[String], val port : Int, socketFactory : SocketFactory) extends PoolableObjectFactory with Log {
   if (hosts.length == 0) {
     throw new IllegalArgumentException("hosts cannot be empty")
   }
@@ -44,16 +45,16 @@ class ConnectionFactory(var hosts : Seq[String], val port : Int, socketFactory :
           if (!socket.isOpen) socket.open
           socket
         } catch {
-          case ex : TTransportException => 
-            println("ex " + ex.getMessage)
-            ex.printStackTrace
+          case ex : TTransportException =>
+            error("Error creating socket", ex)
             createSocket(tail)
         }
     }
-    println("trying to create a socket with hosts list " + hosts)
-    val socket = createSocket(hosts)
-    val first :: tail = hosts
-    hosts = tail ++ List(first)
-    socket
+    synchronized {
+      val socket = createSocket(hosts)
+      val first :: tail = hosts
+      hosts = tail ++ List(first)
+      socket
+    }
   }
 }

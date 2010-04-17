@@ -11,14 +11,16 @@ import serializers.Serializers._
 class GetBuilderSpec extends Specification with Mockito with TestHelper {
   "GetBuilder" should {
     "execute a simple column get" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val cp = new thrift.ColumnPath
       cp.column_family = "cf"
       cp.column = "c".getBytes
       val cons = thrift.ConsistencyLevel.ONE
-      client.get("ks", "row", cp, cons) returns new thrift.ColumnOrSuperColumn
+      val con = new thrift.ColumnOrSuperColumn
+      con.column = new thrift.Column
+      client.get("ks", "row", cp, cons) returns con 
       
-      Keyspace("ks") { ks =>
+      cassandra.keyspace("ks") { ks =>
         implicit val consistency = ReadConsistency.One
         ks.get("row", "cf") / "c" !
       }
@@ -27,7 +29,7 @@ class GetBuilderSpec extends Specification with Mockito with TestHelper {
     }
     
     "execute a supercolumn get" in {
-      val client = clientSetup
+      val (cassandra,client) = clientSetup
       val cp = new thrift.ColumnPath
       cp.column_family = "cf"
       cp.super_column = "c".getBytes
@@ -37,7 +39,7 @@ class GetBuilderSpec extends Specification with Mockito with TestHelper {
       corsc.super_column.columns = new java.util.ArrayList()
       client.get("ks", "row", cp, cons) returns corsc
       
-      Keyspace("ks") { ks =>
+      cassandra.keyspace("ks") { ks =>
         implicit val consistency = ReadConsistency.One
         ks.get("row", "cf") % "c" !
       }

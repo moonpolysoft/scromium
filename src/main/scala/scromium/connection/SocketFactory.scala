@@ -7,7 +7,6 @@ import java.net.Socket
 class SocketFactory {
   @throws(classOf[TTransportException])
   def make(host : String, port : Int) : TSocket = {
-    println("host " + host)
     val addy = InetAddress.getByName(host)
     val socket = new Socket(addy, port)
     new TSocket(socket)

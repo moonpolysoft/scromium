@@ -12,18 +12,14 @@ import serializers.Serializers._
 class KeyspaceSpec extends Specification with Mockito with TestHelper {
   "Keyspace" should {
     "should perform a single column insert" in {
-      val connection = mock[Connection]
-      val pool = fakeConnectionPool(connection)
-      val client = mock[thrift.Cassandra.Client]
-      Keyspace.pool = pool
-      connection.client returns client
+      val (cassandra,client) = clientSetup
       val cp = new thrift.ColumnPath
       cp.column_family = "cf"
       cp.column = "c".getBytes
       val cons = thrift.ConsistencyLevel.ANY
-      val timestamp = System.currentTimeMillis
+      val timestamp = System.nanoTime
       
-      Keyspace("ks") { ks =>
+      cassandra.keyspace("ks") { ks =>
         implicit val consistency = WriteConsistency.Any
         ks.insert("row", "cf" -> "c", "value", timestamp)
       }
@@ -32,19 +28,15 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
     }
     
     "should perform a single supercolumn insert" in {
-      val connection = mock[Connection]
-      val pool = fakeConnectionPool(connection)
-      val client = mock[thrift.Cassandra.Client]
-      Keyspace.pool = pool
-      connection.client returns client
+      val (cassandra,client) = clientSetup
       val cp = new thrift.ColumnPath
       cp.column_family = "cf"
       cp.super_column = "sc".getBytes
       cp.column = "c".getBytes
       val cons = thrift.ConsistencyLevel.ANY
-      val timestamp = System.currentTimeMillis
+      val timestamp = System.nanoTime
       
-      Keyspace("ks") { ks =>
+      cassandra.keyspace("ks") { ks =>
         implicit val consistency = WriteConsistency.Any
         ks.insert("row", "cf" -> "sc" -> "c", "value", timestamp)
       }

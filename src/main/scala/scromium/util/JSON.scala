@@ -15,7 +15,7 @@ object JSON extends JavaTokenParsers {
 
   def member: Parser[(String, Any)] = 
     stringLiteral~":"~value ^^ 
-            { case name~":"~value => (name, value) } 
+            { case name~":"~value => (name.substring(1, name.length-1), value) } 
 
   def value: Parser[Any] = ( 
     obj 

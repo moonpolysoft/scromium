@@ -3,9 +3,9 @@ Scromium
 
 The way shit is supposed to work:
 
-    Cassandra.start
+    val cassandra = Cassandra.start
     
-    Keyspace("fuck") { ks =>
+    cassandra.keyspace("fuck") { ks =>
       implicit val consistency = ReadConsistency.One
       
       //get uses the % operator to denote a supercolumn when chaining paths together
@@ -15,10 +15,27 @@ The way shit is supposed to work:
       val supercolumn = ks.get("row", "column_family") % "supercolumn" !
       val column = ks.get("row", "cf") / "c" !
       
+      //query a column path via a supercolumn using a keyrange (requires OPP)
+      val query = ks.rangeSuper("super_column_family", "supercolumn")
+      //or use a path to a regular column family
+      val query = ks.range("column_family")
+      //or a path to a supercolumn family
+      val query = ks.rangeSuper("super_column_family")
       
-      val query = ks.rangeSlices("column_family", "supercolumn")
-      
+      //we can then set the key range
       query.keys("from_key", "to_key", limit=100)
+      
+      //then we can set the columns explicitly like this
+      query.columns("column1", "column2", "column3")
+      //or as a range
+      query.columns("start", "end" limit=100)
+      //and then execute the query
+      query ! ReadConsistency.Quorum
+      
+      //multiget_slice queries
+      val query = ks.multiget("cf", "supercolumn")
+      
+      query.keys("row1"...)
       // we can set the columns explicitly like this
       query.columns("column1", "column2", "column3")
       // or as a range
@@ -28,11 +45,19 @@ The way shit is supposed to work:
       
       //inserts use the arrow notation for columnfamily and supercolumn paths
       ks.insert[T]("row", "column_family" -> "supercolumn" -> "column", value)
-      ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.Zero)
+      ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.One)
       
       //batches can be built up a little at a time before being executed
+      val batch = ks.batch
+      
+      batch -> "row" { row =>
+        row.add("cf" -> "sc" -> "c", value)
+      }
+      
+      batch!
+      
       val batch = ks.batch("row")
       batch.add("cf" -> "supercolumn" -> "column", value, timestamp)
-      batch ! WriteConsistency.Zero
+      batch ! WriteConsistency.One
       
     }

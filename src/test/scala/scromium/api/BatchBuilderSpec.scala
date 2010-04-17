@@ -10,110 +10,77 @@ import serializers._
 import Serializers._
 import java.util.HashMap
 import java.util.ArrayList
+import scromium.util.Thrift._
 
 class BatchBuilderSpec extends Specification with Mockito with TestHelper {
   "BatchBuilder" should {
     "execute a batch_insert with a super column" in {
-      val client = clientSetup
-      val timestamp = System.currentTimeMillis
-      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
-      val list = new ArrayList[thrift.ColumnOrSuperColumn]
-      val column = new thrift.Column
-      column.name = "c".getBytes
-      column.value = "value".getBytes
-      column.timestamp = timestamp
-      val superColumn = new thrift.SuperColumn
-      superColumn.name = "sc".getBytes
-      superColumn.columns = new ArrayList[thrift.Column]
-      superColumn.columns.add(column)
-      val container = new thrift.ColumnOrSuperColumn
-      container.super_column = superColumn
-      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
-      operations.add(container)
-      map.put("cf", operations)
+      val (cassandra,client) = clientSetup
+      val timestamp = System.nanoTime
+      val map = batchMap("row", "cf")
+      map.get("row").get("cf").add(superColumnMutation("sc".getBytes, ("c".getBytes, "value".getBytes, timestamp)))
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
-        val batch = ks.batch("row")
-        batch.add("cf" -> "sc" -> "c", "value", timestamp)
+        val batch = ks.batch
+        batch.row("row") { row =>
+          row.add("cf" -> "sc" -> "c", "value", timestamp)
+        }
         batch!
       }
       
-      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
     }
     
     "execute a batch_insert with a single column" in {
-      val client = clientSetup
-      val timestamp = System.currentTimeMillis
-      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
-      val list = new ArrayList[thrift.ColumnOrSuperColumn]
-      val column = new thrift.Column
-      column.name = "c".getBytes
-      column.value = "value".getBytes
-      column.timestamp = timestamp
-      val container = new thrift.ColumnOrSuperColumn
-      container.column = column
-      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
-      operations.add(container)
-      map.put("cf", operations)
+      val (cassandra,client) = clientSetup
+      val timestamp = System.nanoTime
+      val map = batchMap("row", "cf")
+      map.get("row").get("cf").add(columnMutation("c".getBytes, "value".getBytes, timestamp))
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
-        val batch = ks.batch("row")
-        batch.add("cf" -> "c", "value", timestamp)
+        val batch = ks.batch
+        batch.row("row") { row =>
+          row.add("cf" -> "c", "value", timestamp)
+        }
         batch!
       }
       
-      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
     }
-    
+        
     "pick the right serializer" in {
-      val client = clientSetup
-      val timestamp = System.currentTimeMillis
-      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
-      val list = new ArrayList[thrift.ColumnOrSuperColumn]
-      val column = new thrift.Column
-      column.name = "c".getBytes
-      column.value = Array[Byte](0)
-      column.timestamp = timestamp
-      val container = new thrift.ColumnOrSuperColumn
-      container.column = column
-      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
-      operations.add(container)
-      map.put("cf", operations)
+      val (cassandra,client) = clientSetup
+      val timestamp = System.nanoTime
+      val map = batchMap("row", "cf")
+      map.get("row").get("cf").add(columnMutation("c".getBytes, Array[Byte](0), timestamp))
       
       class Fuck {}
-      
+  
       implicit object FuckSerializer extends Serializer[Fuck] {
         def serialize(fuck : Fuck) = Array[Byte](0)
-        
+    
         def deserialize(ary : Array[Byte]) = new Fuck
       }
-      
-      Keyspace("ks") {ks =>
+  
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
-        val batch = ks.batch("row")
-        batch.add("cf" -> "c", new Fuck, timestamp)
+        val batch = ks.batch
+        batch.row("row") { row =>
+          row.add("cf" -> "c", new Fuck, timestamp)
+        }
         batch!
       }
-      
-      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+  
+      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
     }
-    
+        
     "pick a covariant serializer" in {
-      val client = clientSetup
-      val timestamp = System.currentTimeMillis
-      val map = new HashMap[String, java.util.List[thrift.ColumnOrSuperColumn]]
-      val list = new ArrayList[thrift.ColumnOrSuperColumn]
-      val column = new thrift.Column
-      column.name = "c".getBytes
-      column.value = Array[Byte](0)
-      column.timestamp = timestamp
-      val container = new thrift.ColumnOrSuperColumn
-      container.column = column
-      val operations = new ArrayList[thrift.ColumnOrSuperColumn]
-      operations.add(container)
-      map.put("cf", operations)
+      val (cassandra,client) = clientSetup
+      val timestamp = System.nanoTime
+      val map = batchMap("row", "cf")
+      map.get("row").get("cf").add(columnMutation("c".getBytes, Array[Byte](0), timestamp))
       
       trait Balls
       
@@ -125,14 +92,27 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         def deserialize(ary : Array[Byte]) : Balls = new Fuck
       }
       
-      Keyspace("ks") {ks =>
+      cassandra.keyspace("ks") {ks =>
         implicit val consistency = WriteConsistency.Any
-        val batch = ks.batch("row")
-        batch.add("cf" -> "c", new Fuck, timestamp)
+        val batch = ks.batch
+        batch.row("row") { row =>
+          row.add("cf" -> "c", new Fuck, timestamp)
+        }
         batch!
       }
       
-      client.batch_insert("ks", "row", map, WriteConsistency.Any.thrift) was called
+      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
     }
+  }
+  
+  type JOpMap = java.util.Map[String, JMuteMap]
+  type JMuteMap = java.util.Map[String, java.util.List[thrift.Mutation]]
+  
+  def batchMap(row : String, cf : String) : JOpMap = {
+    val ops = new java.util.HashMap[String, java.util.Map[String, java.util.List[thrift.Mutation]]]
+    val mutes = new HashMap[String, java.util.List[thrift.Mutation]]
+    mutes.put(cf, new java.util.ArrayList[thrift.Mutation])
+    ops.put(row, mutes)
+    ops.asInstanceOf[JOpMap]
   }
 }

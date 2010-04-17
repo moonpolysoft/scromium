@@ -8,21 +8,15 @@ import org.apache.cassandra.thrift
 trait TestHelper extends Mockito {
   def fakeConnectionPool(conn : Connection) : ConnectionPool = {
     return new ConnectionPool {
-      def withConnection[T](block : Connection => T) : T = {
+      def withConnection[T](block : Client => T) : T = {
         block(conn)
       }
-      
-      def borrow = conn
-      def returnConnection(conn : Connection) {}
     }
   }
   
-  def clientSetup : thrift.Cassandra.Client = {
+  def clientSetup : (Cassandra, Connection) = {
     val connection = mock[Connection]
     val pool = fakeConnectionPool(connection)
-    val client = mock[thrift.Cassandra.Client]
-    Keyspace.pool = pool
-    connection.client returns client
-    client
+    (new Cassandra(pool), connection)
   }
 }

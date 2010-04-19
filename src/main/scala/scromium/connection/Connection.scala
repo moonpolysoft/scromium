@@ -38,6 +38,10 @@ class Connection(val socket : TSocket) extends Client {
     client.insert(ks, key, cp, value, timestamp, c)
   }
   
+  override def remove(ks : String, key : String, cp : ColumnPath, timestamp : Long, c : ConsistencyLevel) {
+    client.remove(ks, key, cp, timestamp, c)
+  }
+  
   override def batch_mutate(ks : String, map : Map[String,Map[String,List[Mutation]]], c : ConsistencyLevel) {
     client.batch_mutate(ks, map, c)
   }

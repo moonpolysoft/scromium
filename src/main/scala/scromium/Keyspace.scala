@@ -53,6 +53,19 @@ class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
     }
   }
   
+  def remove[A](row : Array[Byte], cf : String, timestamp: Long)
+    (implicit consistency : WriteConsistency) : Unit = remove(toHexString(row), cf, timestamp)(consistency)
+  
+  def remove[A](row : String, cf : String, timestamp : Long)
+    (implicit consistency : WriteConsistency) {
+    pool.withConnection { conn =>
+      val columnPath = new thrift.ColumnPath
+      columnPath.column_family = cf
+      debug { "remove(" + name + ", " + row + ", " + columnPath + ")" }
+      conn.remove(name, row, columnPath, timestamp, consistency.thrift)
+    }
+  }
+  
   /**
    * Insert using a byte array as the row key and use the default timestmap
    */

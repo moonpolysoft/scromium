@@ -16,7 +16,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
   "BatchBuilder" should {
     "execute a batch_insert with a super column" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(superColumnMutation("sc".getBytes, ("c".getBytes, "value".getBytes, timestamp)))
       
@@ -34,7 +34,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
     
     "execute a batch_insert with a single column" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(columnMutation("c".getBytes, "value".getBytes, timestamp))
       
@@ -52,7 +52,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         
     "pick the right serializer" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(columnMutation("c".getBytes, Array[Byte](0), timestamp))
       
@@ -78,7 +78,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         
     "pick a covariant serializer" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val map = batchMap("row", "cf")
       map.get("row").get("cf").add(columnMutation("c".getBytes, Array[Byte](0), timestamp))
       

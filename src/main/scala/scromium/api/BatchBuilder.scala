@@ -74,7 +74,7 @@ class RowBatchBuilder {
   
   def add[A,B](ins : (String,A), value : B)
     (implicit cSer : Serializer[A],
-              vSer : Serializer[B]) : RowBatchBuilder = add(ins, value, System.nanoTime)(cSer,vSer)
+              vSer : Serializer[B]) : RowBatchBuilder = add(ins, value, Clock.timestamp)(cSer,vSer)
     
   def add[A,B](ins : (String,A), value : B, timestamp : Long)
     (implicit cSer : Serializer[A],
@@ -96,7 +96,7 @@ class RowBatchBuilder {
   def add[A,B,C](ins : ((String,A),B), value : C)
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
-              vSer : Serializer[C]) : RowBatchBuilder = add(ins, value, System.nanoTime)(scSer, cSer, vSer)
+              vSer : Serializer[C]) : RowBatchBuilder = add(ins, value, Clock.timestamp)(scSer, cSer, vSer)
               
   def add[A,B,C](ins : ((String,A),B), value : C, timestamp : Long)
     (implicit scSer : Serializer[A],

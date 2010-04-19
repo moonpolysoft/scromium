@@ -20,7 +20,7 @@ object Reflect {
     val candidates = clazz.getConstructors filter { cons => matchingTypes(cons.getParameterTypes, argTypes)}
     require(candidates.length == 1, "Argument runtime types must select exactly one constructor")
     val params = args map { _.value }
-    candidates.first.newInstance(params: _*).asInstanceOf[T]
+    candidates.head.newInstance(params: _*).asInstanceOf[T]
   }
 
   private def matchingTypes(declared: Array[Class[_]], actual: Array[Class[_]]): Boolean = {

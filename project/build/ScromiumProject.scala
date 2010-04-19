@@ -4,7 +4,8 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   override def compileOptions = Deprecation :: Unchecked :: super.compileOptions.toList
   
   val sourceArtifact = Artifact(artifactID, "src", "jar", Some("sources"), Nil, None) 
-  override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageSrc)
+  val docsArtifact = Artifact(artifactID, "docs", "jar", Some("javadocs"), Nil, None) 
+  override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageDocs, packageSrc)
   
   val codaRepo = "Coda Hale's Repository" at "http://repo.codahale.com/"
   val jetlangRepo = "Jet Lang Repository" at "http://jetlang.googlecode.com/svn/repo/"

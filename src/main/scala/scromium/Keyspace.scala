@@ -28,6 +28,44 @@ class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
   def get(row : Array[Byte], cf : String) = new CFPath(this, toHexString(row), cf)
   def get(row : String, cf : String) = new CFPath(this, row, cf)
   
+  def remove[A](row : Array[Byte], rem : (String, A))
+    (implicit cSer : Serializer[A],
+              consistency : WriteConsistency) : Unit = remove(toHexString(row), rem)(cSer, consistency)
+
+  def remove[A](row : String, rem : (String, A))
+    (implicit cSer : Serializer[A],
+              consistency : WriteConsistency) : Unit = remove(row, rem, Clock.timestamp)(cSer, consistency)
+  
+  def remove[A](row : Array[Byte], rem : (String, A), timestamp: Long)
+    (implicit cSer : Serializer[A],
+              consistency : WriteConsistency) : Unit = remove(toHexString(row), rem, timestamp)(cSer, consistency)
+  
+  def remove[A](row : String, rem : (String, A), timestamp : Long)
+    (implicit cSer : Serializer[A],
+              consistency : WriteConsistency) {
+    val (cf, c) = rem
+    pool.withConnection { conn =>
+      val columnPath = new thrift.ColumnPath
+      columnPath.column_family = cf
+      columnPath.column = cSer.serialize(c)
+      debug { "remove(" + name + ", " + row + ", " + columnPath + ")" }
+      conn.remove(name, row, columnPath, timestamp, consistency.thrift)
+    }
+  }
+  
+  def remove[A](row : Array[Byte], cf : String, timestamp: Long)
+    (implicit consistency : WriteConsistency) : Unit = remove(toHexString(row), cf, timestamp)(consistency)
+  
+  def remove[A](row : String, cf : String, timestamp : Long)
+    (implicit consistency : WriteConsistency) {
+    pool.withConnection { conn =>
+      val columnPath = new thrift.ColumnPath
+      columnPath.column_family = cf
+      debug { "remove(" + name + ", " + row + ", " + columnPath + ")" }
+      conn.remove(name, row, columnPath, timestamp, consistency.thrift)
+    }
+  }
+  
   /**
    * Insert using a byte array as the row key and use the default timestmap
    */
@@ -39,7 +77,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
   def insert[A, B](row : String, ins : (String, A), value : B)
     (implicit cSer : Serializer[A],
               vSer : Serializer[B],
-              consistency : WriteConsistency) : Unit = insert(row, ins, value, System.nanoTime)(cSer, vSer, consistency)
+              consistency : WriteConsistency) : Unit = insert(row, ins, value, Clock.timestamp)(cSer, vSer, consistency)
   //---------------------------------------------------------------------
   
   //---------------------------------------------------------------------
@@ -76,7 +114,7 @@ class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
     (implicit scSer : Serializer[A],
               cSer : Serializer[B],
               vSer : Serializer[C],
-              consistency : WriteConsistency) : Unit = insert(row, ins, value, System.nanoTime)(scSer, cSer, vSer, consistency)
+              consistency : WriteConsistency) : Unit = insert(row, ins, value, Clock.timestamp)(scSer, cSer, vSer, consistency)
   //---------------------------------------------------------------------
   
   //---------------------------------------------------------------------

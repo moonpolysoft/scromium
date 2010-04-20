@@ -22,6 +22,10 @@ abstract class Client {
     throw new Exception("not implemented")
   }
   
+  def remove(ks : String, key : String, cp : ColumnPath, timestamp : Long, c : ConsistencyLevel) {
+    throw new Exception("not implemented")
+  }
+  
   def batch_mutate(ks : String, map : Map[String,Map[String,List[Mutation]]], c : ConsistencyLevel) {
     throw new Exception("not implemented")
   }

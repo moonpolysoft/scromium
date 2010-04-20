@@ -13,7 +13,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
   "QueryBuilder" should {
     "execute get_range_slices for a normal column family and only a key range" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val parent = new thrift.ColumnParent("cf")
       val predicate = slicePredicate("".getBytes, "".getBytes,100)
       val range = keyRange("start", "finish", 100)
@@ -37,7 +37,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
     
     "execute get_range_slices for a normal column family with column ranges and key ranges" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val parent = new thrift.ColumnParent
       parent.column_family = "cf"
       val predicate = new thrift.SlicePredicate
@@ -72,7 +72,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
     
     "execute multiget_slice for a normal column family with a null column list" in {
       val (cassandra,client) = clientSetup
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       val parent = new thrift.ColumnParent("cf")
       val predicate = slicePredicate("".getBytes, "".getBytes, 100)
       val keyList = new java.util.ArrayList[String]

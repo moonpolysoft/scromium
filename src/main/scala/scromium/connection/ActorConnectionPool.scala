@@ -5,7 +5,7 @@ import org.apache.thrift.transport.TTransportException
 import java.io.IOException
 import scromium.util.Log
 
-class ActorConnection(connectionFactory : ConnectionFactory) extends ActorBehavior[Function[Client,Any],Any] with Log {
+class ActorConnection(connectionFactory : ConnectionFactory) extends AbstractActor[Function[Client,Any],Any] with Log {
   var connection : Connection = null
   
   override def onStart() {

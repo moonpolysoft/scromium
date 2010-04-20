@@ -17,7 +17,7 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
       cp.column_family = "cf"
       cp.column = "c".getBytes
       val cons = thrift.ConsistencyLevel.ANY
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       
       cassandra.keyspace("ks") { ks =>
         implicit val consistency = WriteConsistency.Any
@@ -27,6 +27,22 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
       client.insert("ks", "row", cp, "value".getBytes, timestamp, cons) was called
     }
     
+    "should perform a single column removal" in {
+      val (cassandra,client) = clientSetup
+      val cp = new thrift.ColumnPath
+      cp.column_family = "cf"
+      cp.column = "c".getBytes
+      val cons = thrift.ConsistencyLevel.ANY
+      val timestamp = Clock.timestamp
+      
+      cassandra.keyspace("ks") { ks =>
+        implicit val consistency = WriteConsistency.Any
+        ks.remove("row", "cf" -> "c", timestamp)
+      }
+      
+      client.remove("ks", "row", cp, timestamp, cons) was called
+    }
+    
     "should perform a single supercolumn insert" in {
       val (cassandra,client) = clientSetup
       val cp = new thrift.ColumnPath
@@ -34,7 +50,7 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
       cp.super_column = "sc".getBytes
       cp.column = "c".getBytes
       val cons = thrift.ConsistencyLevel.ANY
-      val timestamp = System.nanoTime
+      val timestamp = Clock.timestamp
       
       cassandra.keyspace("ks") { ks =>
         implicit val consistency = WriteConsistency.Any

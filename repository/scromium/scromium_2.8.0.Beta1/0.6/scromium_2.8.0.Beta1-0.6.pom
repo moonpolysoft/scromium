@@ -7,6 +7,12 @@
     <version>0.6</version>
     <dependencies>
         <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.4</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>1.4</version>
@@ -15,13 +21,13 @@
         <dependency>
             <groupId>com.yammer</groupId>
             <artifactId>metrics_2.8.0.Beta1</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.3</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.5.11</version>
+            <groupId>org.jetlang</groupId>
+            <artifactId>jetlang</artifactId>
+            <version>0.2.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -31,9 +37,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>commons-pool</groupId>
-            <artifactId>commons-pool</artifactId>
-            <version>1.5.4</version>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.5.11</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -51,19 +57,13 @@
         <dependency>
             <groupId>com.codahale</groupId>
             <artifactId>guild_2.8.0.Beta1</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>0.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.jetlang</groupId>
-            <artifactId>jetlang</artifactId>
-            <version>0.2.0</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
-            <version>2.4</version>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+            <version>1.5.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

@@ -39,11 +39,13 @@ class ActorConnectionFactory(connectionFactory : ConnectionFactory) extends Acto
   }
 }
 
-class ActorConnectionPool(val seedHost : String,
-    val seedPort : Int,
-    val actors : Int,
+class ActorConnectionPool(config : Map[String,Any],
     socketFactory : SocketFactory = new SocketFactory,
     clusterDiscovery : ClusterDiscovery = new ClusterDiscovery) extends ConnectionPool with Log {
+      
+  val seedHost = config("seedHost").asInstanceOf[String]
+  val seedPort = config("seedPort").asInstanceOf[Int]
+  val actors = config("actors").asInstanceOf[Int]
   
   val hosts = clusterDiscovery.hosts(seedHost,seedPort)
   val connectionFactory = new ConnectionFactory(hosts, seedPort, socketFactory)

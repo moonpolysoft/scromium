@@ -6,12 +6,14 @@ import scromium.util.JSON
 import scromium.util.Log
 
 
-class CommonsConnectionPool(val seedHost : String, 
-    val seedPort : Int,
-    val maxIdle : Int, 
-    val initCapacity : Int, 
+class CommonsConnectionPool(config : Map[String,Any],
     socketFactory : SocketFactory = new SocketFactory, 
     clusterDiscovery : ClusterDiscovery = new ClusterDiscovery) extends ConnectionPool with Log {
+  
+  val seedHost = config("seedHost").asInstanceOf[String]
+  val seedPort = config("seedPort").asInstanceOf[Int]
+  val maxIdle = config("maxIdle").asInstanceOf[Int]
+  val initCapacity = config("initCapacity").asInstanceOf[Int]
   
   val hosts = clusterDiscovery.hosts(seedHost,seedPort)
   val objectPool = new StackObjectPool(new ConnectionFactory(hosts, seedPort, socketFactory), maxIdle, initCapacity)

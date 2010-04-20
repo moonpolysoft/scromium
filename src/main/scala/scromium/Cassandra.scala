@@ -71,7 +71,7 @@ object Cassandra extends Log {
     implicit val classLoader = this.getClass.getClassLoader
     
     val claz = config("connectionPool").asInstanceOf[String]
-    New(claz)(config)
+    New(claz)(config, new SocketFactory, new ClusterDiscovery)
   }
   
   private def getConfig(file : File) : Map[String, Any] = {

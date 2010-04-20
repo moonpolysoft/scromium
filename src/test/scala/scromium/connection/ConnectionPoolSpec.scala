@@ -17,7 +17,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       socketFactory.make("127.0.0.1", 9160) returns socket
       socket.isOpen returns true
       
-      val connPool = new CommonsConnectionPool("10.10.10.10", 9160, 1, 1, socketFactory, clusterDiscovery)
+      val connPool = new CommonsConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "maxIdle" -> 1, "initCapacity" -> 1), socketFactory, clusterDiscovery)
       val connection = connPool.borrow
       
       connection must notBeNull
@@ -34,7 +34,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       socketFactory.make("192.168.0.1", 9160) returns socket
       socket.isOpen returns true
       
-      val connPool = new CommonsConnectionPool("10.10.10.10", 9160, 1, 1, socketFactory, clusterDiscovery)
+      val connPool = new CommonsConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "maxIdle" -> 1, "initCapacity" -> 1), socketFactory, clusterDiscovery)
       val connection = connPool.borrow
       
       connection must notBeNull
@@ -48,7 +48,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       clusterDiscovery.hosts("10.10.10.10", 9160) returns List("127.0.0.1")
       socketFactory.make("127.0.0.1", 9160) throws new TTransportException("")
       
-      val connPool = new CommonsConnectionPool("10.10.10.10", 9160, 1, 1, socketFactory, clusterDiscovery)
+      val connPool = new CommonsConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "maxIdle" -> 1, "initCapacity" -> 1), socketFactory, clusterDiscovery)
       connPool must notBeNull
       val a = () => { connPool.borrow } 
       a() must throwA[Exception]
@@ -63,7 +63,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       socket.isOpen returns true
       socketFactory.make(anyString, anyInt) returns socket
       
-      val connPool = new CommonsConnectionPool("10.10.10.10", 9160, 10, 10, socketFactory, clusterDiscovery)
+      val connPool = new CommonsConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "maxIdle" -> 10, "initCapacity" -> 10), socketFactory, clusterDiscovery)
       connPool.borrow
       connPool.borrow
       connPool.borrow
@@ -86,7 +86,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       socketFactory.make("127.0.0.1", 9160) returns socket
       socket.isOpen returns true
       
-      val connPool = new ActorConnectionPool("10.10.10.10", 9160, 1, socketFactory, clusterDiscovery)
+      val connPool = new ActorConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "actors" -> 1), socketFactory, clusterDiscovery)
       val connection = connPool.withConnection { c => c}
       
       
@@ -104,7 +104,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       socketFactory.make("192.168.0.1", 9160) returns socket
       socket.isOpen returns true
       
-      val connPool = new ActorConnectionPool("10.10.10.10", 9160, 1, socketFactory, clusterDiscovery)
+      val connPool = new ActorConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "actors" -> 1), socketFactory, clusterDiscovery)
       var connection = connPool.withConnection { c => c }
       
       connection must notBeNull
@@ -118,7 +118,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       clusterDiscovery.hosts("10.10.10.10", 9160) returns List("127.0.0.1")
       socketFactory.make("127.0.0.1", 9160) throws new TTransportException("")
       
-      val connPool = new ActorConnectionPool("10.10.10.10", 9160, 1, socketFactory, clusterDiscovery)
+      val connPool = new ActorConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "actors" -> 1), socketFactory, clusterDiscovery)
       connPool must notBeNull
       val a = () => { connPool.withConnection {c => c} } 
       a() must throwA[Exception]
@@ -133,7 +133,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       socket.isOpen returns true
       socketFactory.make(anyString, anyInt) returns socket
       
-      val connPool = new ActorConnectionPool("10.10.10.10", 9160, 3, socketFactory, clusterDiscovery)
+      val connPool = new ActorConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "actors" -> 3), socketFactory, clusterDiscovery)
       
       Thread.sleep(50)
       
@@ -155,7 +155,7 @@ class ConnectionPoolSpec extends Specification with Mockito {
       
       badSocket.flush throws new TTransportException("fuck right off")
       
-      val connPool = new ActorConnectionPool("10.10.10.10", 9160, 1, socketFactory, clusterDiscovery)
+      val connPool = new ActorConnectionPool(Map("seedHost" -> "10.10.10.10", "seedPort" -> 9160, "actors" -> 1), socketFactory, clusterDiscovery)
       
       connPool.withConnection { conn => 
         conn.asInstanceOf[Connection].socket.flush

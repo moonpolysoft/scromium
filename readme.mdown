@@ -5,7 +5,7 @@ Scromium is a scala library for dealing with the utter shit show that is the
 cassandra thrift API.  Assuming you use SBT, pull scromium into your project thusly:
 
       val scromiumRepo = "Cliff's Scromium Repo" at "http://cliffmoon.github.com/scromium/repository/"
-      val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6" artifacts Artifact("scromium-all_2.8.0.Beta1", "all", "jar")
+      val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6.1" artifacts Artifact("scromium-all_2.8.0.Beta1", "all", "jar")
       
 Why the extra artifact?  We'll get to that.
 
@@ -36,7 +36,7 @@ interface and running the embedded Cassandra node.
 Pulling in the thin Jar:
 
     val scromiumRepo = "Cliff's Scromium Repo" at "http://cliffmoon.github.com/scromium/repository/"
-    val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6"
+    val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6.1"
     
 There is also a fat jar available as scromium-all.  It includes a patched version of cassandra along with its unmanaged
 dependencies.
@@ -44,7 +44,7 @@ dependencies.
 Pulling in the fat Jar:
 
     val scromiumRepo = "Cliff's Scromium Repo" at "http://cliffmoon.github.com/scromium/repository/"
-    val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6" artifacts Artifact("scromium-all_2.8.0.Beta1", "all", "jar")
+    val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6.1" artifacts Artifact("scromium-all_2.8.0.Beta1", "all", "jar")
 
 Taste The Difference (API Tour)
 ------

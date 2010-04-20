@@ -1,12 +1,9 @@
 package scromium
 
-import java.util.concurrent.TimeUnit._
-
 object Clock {
-  private val ratio = NANOSECONDS.convert(1, MICROSECONDS)
-  
   /**
-   * Returns the current epoch time in microseconds.
+   * Returns the current epoch time in microseconds. (Well, really just
+   * milliseconds with some clock-related skew at the end)
    */
-  def timestamp = System.nanoTime / ratio
+  def timestamp = (System.currentTimeMillis * 1000) + ((System.nanoTime / 1000) % 1000)
 }

@@ -211,6 +211,6 @@ be supplied as a JSON file passed in to `Cassandra.start(file : String)`.
 The configuration simply consists of the class name of a ConnectionPool implementation and options
 which should be passed in.
 
-The default is the CommonsConnectionPool wich uses the Apache Commons stack object pool as its 
+The default is the CommonsConnectionPool which uses the Apache Commons stack object pool as its 
 implementation.  There is also an ActorConnectionPool which wraps each connection in an individual
 actor for automatic asynchronous execution.

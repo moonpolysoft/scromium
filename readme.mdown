@@ -1,19 +1,86 @@
 Scromium
 ==========
 
-The way shit is supposed to work:
+Scromium is a scala library for dealing with the utter shit show that is the
+cassandra thrift API.  Assuming you use SBT, pull scromium into your project thusly:
 
+      val scromiumRepo = "Cliff's Scromium Repo" at "http://cliffmoon.github.com/scromium/repository/"
+      val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6" artifacts Artifact("scromium-all_2.8.0.Beta1", "all", "jar")
+      
+Why the extra artifact?  We'll get to that.
+
+Features
+-----
+
+* Chainable API for building up queries and inserts.
+* Exposes most (not all) of Cassandra's thrift API in a typesafe manner.
+* Implicit serialization and deserialization API's make it easy to define conversions for custom classes.
+* Integrated test harness that will reliably start up and shut down an embedded cassandra instance in your tests.
+* Pluggable connection pool with reliable connection handling, including retries for downed servers.
+* JSON based configuration.
+
+Versioning
+------
+
+Starting with version 0.6 the minor version number will be pinned to Cassandra's.  Thus making it easy to know
+which versions of Cassandra will be compatible with Scromium.
+
+Which Artifacts Do You Need?
+------
+
+Scromium has two different artifacts available in the main repository.  The default artifact is simply a jar with the
+main scromium code.  Its transitive dependencies are declared in the .pom, however there are a few dependencies that it
+relies upon which are not managed by a maven repository.  These unmanaged dependencies have mostly to do with the thrift
+interface and running the embedded Cassandra node.
+
+Pulling in the thin Jar:
+
+    val scromiumRepo = "Cliff's Scromium Repo" at "http://cliffmoon.github.com/scromium/repository/"
+    val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6"
+    
+There is also a fat jar available as scromium-all.  It includes a patched version of cassandra along with its unmanaged
+dependencies.
+    
+Pulling in the fat Jar:
+
+    val scromiumRepo = "Cliff's Scromium Repo" at "http://cliffmoon.github.com/scromium/repository/"
+    val scromium = "scromium" % "scromium_2.8.0.Beta1" % "0.6" artifacts Artifact("scromium-all_2.8.0.Beta1", "all", "jar")
+
+Taste The Difference (API Tour)
+------
+
+The way shit is supposed to work.  We need to first start Scromium, which involves reading in the configuration and spinning
+up a connection pool.  Start will take either no arguments, a file, or a Map[String,Any] depending on how you want to
+deliver Scromium's configuration.
+
+    import scromium._
+    import scromium.api._
+    import scromium.serializers.Serializers._
+    
     val cassandra = Cassandra.start
     
+Most of the API is chainable, except where it either is not possible or does not make sense.  The idea
+is to be able to build up queries and inserts naturally.  This piece of code opens up the keyspace "fuck"
+for some operations, and passes that keyspace into the resulting block.
+    
     cassandra.keyspace("fuck") { ks =>
+      
+Consistency levels can be delivered via implicit parameters.  This saves a lot of typing if you know a
+block of code will all be using the same read or write consistency level.
+      
       implicit val consistency = ReadConsistency.One
       
-      //get uses the % operator to denote a supercolumn when chaining paths together
-      //this is to give the scala compiler the hint that the return type is going to be a
-      //supercolumn when we execute with just the supercolumn type
+The get API is oriented around around either retrieving a single cell or a single supercolumn.  It uses the `%` operator
+to denote a supercolumn when chaining paths together.  This lets the API know that you are expecting to
+query a supercolumn, thus making sure that the correct types are returned from the query.  This saves from having
+ugly casts and union types like ColumnOrSuperColumn.
+      
       val column = ks.get("row", "column_family") % "supercolumn" / "column" ! ReadConsistency.Quorum
       val supercolumn = ks.get("row", "column_family") % "supercolumn" !
       val column = ks.get("row", "cf") / "c" !
+      
+Range queries are performed via the range and rangeSuper methods of Keyspace.  Range queries require using
+the OrderPreservingPartitioner, so they will fail with an incorrectly configured Cassandra node.
       
       //query a column path via a supercolumn using a keyrange (requires OPP)
       val query = ks.rangeSuper("super_column_family", "supercolumn")
@@ -32,6 +99,9 @@ The way shit is supposed to work:
       //and then execute the query
       query ! ReadConsistency.Quorum
       
+Multiget calls the underlying multiget_slice method in the Cassandra API.  It operates in a similar way
+to range queries.
+      
       //multiget_slice queries
       val query = ks.multiget("cf", "supercolumn")
       
@@ -43,21 +113,90 @@ The way shit is supposed to work:
       // execute the query
       query ! ReadConsistency.Quorum
       
-      //inserts use the arrow notation for columnfamily and supercolumn paths
+Inserts use array notation to show column and supercolumn paths
+      
       ks.insert[T]("row", "column_family" -> "supercolumn" -> "column", value)
       ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.One)
       
-      //batches can be built up a little at a time before being executed
+Batch inserts are designed to be built up a little at a time.
+      
       val batch = ks.batch
       
-      batch -> "row" { row =>
+`batch.row("row")` takes a block where it passes in a RowBatchBuilder which can be used to batch
+up operations for that particular row.
+      
+      batch.row("row1") { row =>
         row.add("cf" -> "sc" -> "c", value)
+      }.row("row2") { row =>
+        row.add("cf" -> "sc2" -> "c2", value2)
       }
       
       batch!
       
-      val batch = ks.batch("row")
-      batch.add("cf" -> "supercolumn" -> "column", value, timestamp)
-      batch ! WriteConsistency.One
+Throughout all of these examples not much attention has been paid to the types of the columns,
+supercolumns, and values.  Cassandra deals with these internally as opaque byte arrays.  Scromium
+provides a serialization API with a few presets defined.  This serialization API should make
+it easy for you to write conversions from your own objects into and back out from byte arrays.
+
+Serializers are provided to the API as implicit parameters.  Scala will automatically choose the
+most specific Serializer or Deserializer available at the call site.
+
+You can define your own Serializers.
+
+      implicit object FuckSerializer extends Serializer[Fuck] {
+        def serialize(fuck : Fuck) = Array[Byte](0)
+
+        def deserialize(ary : Array[Byte]) = new Fuck
+      }
       
+And that will allow you to give a Fuck and get a Fuck as long as that implicit object is in scope.
+
+      ks.insert("row", "cf" -> "c", new Fuck)
+      
+      val result = ks.get("row") / "cf" / "c" !;
+      val myFuck = result.valueAs[Fuck]
+
+Simple as Fuck!
+
     }
+    
+Testing Is Hard
+-------
+
+The API of scromium actively resists testing via mocking.  Also I believe mocking in this case is dumb.
+When you mock something like a database what are you testing against?  Certainly not the behavior of
+the actual database.  You are testing against your assumptions about how the database ought to work.
+We are in the JVM.  Why reimplement cassandra using a mocking API?  We should simply lean into it and
+embed a Cassandra node in our tests.
+
+    import org.specs._
+    import scromium._
+    import scromium.serializers.Serializers._
+
+    class FuckSpecification extends Specification {
+
+      var cassandra : Cassandra = null
+
+      doBefore { cassandra = Cassandra.startTest }
+      doAfter { cassandra.teardownTest }
+      
+      "Fuck" should {
+        "do some shit" in {
+          cassandra.keyspace("fuck_shit") { ks =>
+            implicit val w = WriteConsistency.One
+            implicit val r = ReadConsistency.Any
+            
+            ks.insert("its", "a" -> "stack" -> "of", "fuckshit")
+            val result = ks.get("its", "a") % "stack" / "of" !; 
+            result.valueAs[String] must be("fuckshit")
+          }
+        }
+      }
+    }
+    
+That test should green bar.
+
+The one caveat with running Cassandra in this way is that it starts up a shit ton of threads and
+once we pull the rug out from under them in the teardown method they will eventually start vomiting
+to the console.  They are harmless, mind you, but something to be aware of.  Ghosts of instantiation
+past.

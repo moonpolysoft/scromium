@@ -200,3 +200,17 @@ The one caveat with running Cassandra in this way is that it starts up a shit to
 once we pull the rug out from under them in the teardown method they will eventually start vomiting
 to the console.  They are harmless, mind you, but something to be aware of.  Ghosts of instantiation
 past.
+
+Configuration
+------
+
+Scromium is configured via a `Map[String,Any]`.  This configuration can be delivered through a variety
+of means.  It can either be passed directly into `Cassandra.start(map : Map[String,Any])` or it can
+be supplied as a JSON file passed in to `Cassandra.start(file : String)`.
+
+The configuration simply consists of the class name of a ConnectionPool implementation and options
+which should be passed in.
+
+The default is the CommonsConnectionPool wich uses the Apache Commons stack object pool as its 
+implementation.  There is also an ActorConnectionPool which wraps each connection in an individual
+actor for automatic asynchronous execution.

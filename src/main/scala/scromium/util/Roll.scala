@@ -2,14 +2,14 @@ package scromium.util
 
 object Roll {
   def roll(str : String) : String = {
-    def reverseRoll(str : List[Byte], acc: List[Byte]) : List[Byte] = str match {
-      case Nil => 0.toByte :: acc
-      case -1 :: tail =>
-        reverseRoll(str.tail, 0.toByte :: acc)
+    def reverseRoll(str : List[Char], acc: List[Char]) : List[Char] = str match {
+      case Nil => Character.MIN_VALUE :: acc
+      case Character.MAX_VALUE :: tail =>
+        reverseRoll(str.tail, Character.MIN_VALUE :: acc)
       case head :: tail =>
-        tail.reverse ++ List(((head + 1).toByte)) ++ acc
+        tail.reverse ++ List((head.toInt + 1).toChar) ++ acc
     }
-    val chars = reverseRoll(str.reverse.getBytes.toList, Nil)
+    val chars = reverseRoll(str.reverse.toCharArray.toList, Nil)
     new String(chars.toArray)
   }
 }

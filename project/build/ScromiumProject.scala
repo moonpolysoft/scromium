@@ -15,7 +15,7 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   val jetlangRepo = "Jet Lang Repository" at "http://jetlang.googlecode.com/svn/repo/"
   
   val metrics = "com.yammer" %% "metrics" % "1.0.3" withSources()
-  val guild = "com.codahale" %% "guild" % "0.1.0"
+  val guild = "com.codahale" %% "guild" % "0.1.1"
   val jetlang = "org.jetlang" % "jetlang" % "0.2.0" withSources()
   val pool = "commons-pool" % "commons-pool" % "1.5.4" withSources() intransitive()
   val codec = "commons-codec" % "commons-codec" % "1.4"

@@ -56,9 +56,12 @@ abstract class MultiQueryBuilder(ks : Keyspace, cf : String) extends QueryBuilde
         predicate,
         consistency.thrift)
         
-      results.map { case (key, columns) =>
-        (key, columns.map{ container => fac.make(container)})
-      }.toMap
+      val map = new HashMap[String,Seq[A]]()
+
+      for (entry <- results.entrySet) {
+        map.put(entry.getKey, entry.getValue.map {container => fac.make(container)})
+      }
+      map.toMap
     }
   }
 }

@@ -25,9 +25,11 @@ class ActorConnection(connectionFactory : ConnectionFactory) extends AbstractAct
     } catch {
       case e : IOException => 
         connection = connectionFactory.make
+        error("connection encountered error", e)
         onMessage(block)
       case e : TTransportException =>
         connection = connectionFactory.make
+        error("connection encountered error", e)
         onMessage(block)
     }
   }

@@ -114,7 +114,7 @@ object ScanStream extends Log {
         
         val rows = results.map { slice =>
           Row(slice.key, slice.columns.map(converter(_)))
-        }.sortWith(RowOrdering)
+        }.sorted(RowOrdering)
         
         if (rows.length == 0) {
           Stream.empty
@@ -147,7 +147,7 @@ object ScanStream extends Log {
     val buff = new StringBuilder
     for (b <- ary) {
       if (b >= 33 && b <= 126) {
-        buff += b
+        buff += b.toChar
       } else {
         var str = (b.toLong & 0xff).toOctalString
         if (str.length == 2) {

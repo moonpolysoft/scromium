@@ -25,7 +25,7 @@ class GetBuilderSpec extends Specification with Mockito with TestHelper {
         ks.get("row", "cf") / "c" !
       }
       
-      client.get("ks", "row", cp, cons) was called
+      there was one(client).get("ks", "row", cp, cons)
     }
     
     "execute a supercolumn get" in {
@@ -44,7 +44,7 @@ class GetBuilderSpec extends Specification with Mockito with TestHelper {
         ks.get("row", "cf") % "c" !
       }
       
-      client.get("ks", "row", cp, cons) was called
+      there was one(client).get("ks", "row", cp, cons)
     }
   }
 }

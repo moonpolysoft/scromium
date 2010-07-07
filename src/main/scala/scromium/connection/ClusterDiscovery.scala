@@ -14,6 +14,6 @@ class ClusterDiscovery {
     val tokenMap = JSON.parseObject(client.get_string_property("token map"))
     socket.close
     val seq = for ((key, value) <- tokenMap if value.isInstanceOf[String]) yield(value.asInstanceOf[String])
-    seq.toSeq.removeDuplicates
+    seq.toSeq.distinct
   }
 }

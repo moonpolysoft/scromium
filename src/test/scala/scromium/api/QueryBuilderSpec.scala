@@ -32,7 +32,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
         results must notBeNull
       }
       
-      client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) was called
+      there was one(client).get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE)
     }
     
     "execute get_range_slices for a normal column family with column ranges and key ranges" in {
@@ -67,7 +67,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
         results must notBeNull
       }
       
-      client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) was called
+      there was one(client).get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE)
     }
     
     "execute multiget_slice for a normal column family with a null column list" in {
@@ -94,7 +94,7 @@ class QueryBuilderSpec extends Specification with Mockito with TestHelper {
         results must notBeNull
       }
       
-      client.multiget_slice("ks", keyList, parent, predicate, thrift.ConsistencyLevel.ONE) was called
+      there was one(client).multiget_slice("ks", keyList, parent, predicate, thrift.ConsistencyLevel.ONE)
     }
   }
 }

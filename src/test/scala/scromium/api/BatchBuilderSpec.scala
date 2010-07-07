@@ -29,7 +29,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         batch!
       }
       
-      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
+      there was one(client).batch_mutate("ks", map, WriteConsistency.Any.thrift)
     }
     
     "execute a batch_insert with a single column" in {
@@ -47,7 +47,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         batch!
       }
       
-      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
+      there was one(client).batch_mutate("ks", map, WriteConsistency.Any.thrift)
     }
         
     "pick the right serializer" in {
@@ -73,7 +73,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         batch!
       }
   
-      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
+      there was one(client).batch_mutate("ks", map, WriteConsistency.Any.thrift)
     }
         
     "pick a covariant serializer" in {
@@ -101,7 +101,7 @@ class BatchBuilderSpec extends Specification with Mockito with TestHelper {
         batch!
       }
       
-      client.batch_mutate("ks", map, WriteConsistency.Any.thrift) was called
+      there was one(client).batch_mutate("ks", map, WriteConsistency.Any.thrift)
     }
   }
   

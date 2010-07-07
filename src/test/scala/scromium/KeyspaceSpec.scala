@@ -24,7 +24,7 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
         ks.insert("row", "cf" -> "c", "value", timestamp)
       }
       
-      client.insert("ks", "row", cp, "value".getBytes, timestamp, cons) was called
+      there was one(client).insert("ks", "row", cp, "value".getBytes, timestamp, cons)
     }
     
     "should perform a single column removal" in {
@@ -40,7 +40,7 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
         ks.remove("row", "cf" -> "c", timestamp)
       }
       
-      client.remove("ks", "row", cp, timestamp, cons) was called
+      there was one(client).remove("ks", "row", cp, timestamp, cons)
     }
     
     "should perform a single supercolumn insert" in {
@@ -57,7 +57,7 @@ class KeyspaceSpec extends Specification with Mockito with TestHelper {
         ks.insert("row", "cf" -> "sc" -> "c", "value", timestamp)
       }
       
-      client.insert("ks", "row", cp, "value".getBytes, timestamp, cons) was called
+      there was one(client).insert("ks", "row", cp, "value".getBytes, timestamp, cons)
     }
   }
 }

@@ -56,9 +56,9 @@ class ScannerBuilderSpec extends Specification with Mockito with TestHelper {
         count must ==(16)
       }
       
-      client.get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE) was called
-      client.get_range_slices("ks", parent, predicate, range2, thrift.ConsistencyLevel.ONE) was called
-      client.get_range_slices("ks", parent, predicate, range3, thrift.ConsistencyLevel.ONE) was called
+      there was one(client).get_range_slices("ks", parent, predicate, range, thrift.ConsistencyLevel.ONE)
+      there was one(client).get_range_slices("ks", parent, predicate, range2, thrift.ConsistencyLevel.ONE)
+      there was one(client).get_range_slices("ks", parent, predicate, range3, thrift.ConsistencyLevel.ONE)
     }
   }
 }

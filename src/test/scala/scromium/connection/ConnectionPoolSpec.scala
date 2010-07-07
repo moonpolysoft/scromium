@@ -68,10 +68,9 @@ class ConnectionPoolSpec extends Specification with Mockito {
       connPool.borrow
       connPool.borrow
       
-      theMethod(socketFactory.make("127.0.0.1", 9160)).on(socketFactory) then
-      theMethod(socketFactory.make("192.168.0.1", 9160)).on(socketFactory) then
-      theMethod(socketFactory.make("127.0.0.1", 9160)).on(socketFactory) were
-      called.inOrder
+      there was one(socketFactory).make("127.0.0.1", 9160) then
+      one(socketFactory).make("192.168.0.1", 9160) then
+      one(socketFactory).make("127.0.0.1", 9160)
       
     }
   }
@@ -137,10 +136,9 @@ class ConnectionPoolSpec extends Specification with Mockito {
       
       Thread.sleep(50)
       
-      theMethod(socketFactory.make("127.0.0.1", 9160)).on(socketFactory) then
-      theMethod(socketFactory.make("192.168.0.1", 9160)).on(socketFactory) then
-      theMethod(socketFactory.make("127.0.0.1", 9160)).on(socketFactory) were
-      called.inOrder
+      there was one(socketFactory).make("127.0.0.1", 9160) then
+      one(socketFactory).make("192.168.0.1", 9160) then
+      one(socketFactory).make("127.0.0.1", 9160)
     }
     
     "survive host outages" in {
@@ -161,8 +159,8 @@ class ConnectionPoolSpec extends Specification with Mockito {
         conn.asInstanceOf[Connection].socket.flush
       }
       
-      badSocket.flush was called
-      goodSocket.flush was called
+      there was one(badSocket).flush
+      there was one(goodSocket).flush
     }
   }
 }

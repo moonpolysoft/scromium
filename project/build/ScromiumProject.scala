@@ -13,8 +13,9 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   
   val codaRepo = "Coda Hale's Repository" at "http://repo.codahale.com/"
   val jetlangRepo = "Jet Lang Repository" at "http://jetlang.googlecode.com/svn/repo/"
+  val nexus = "nexus" at "http://nexus.scala-tools.org/content/repositories/snapshots/"
   
-  val metrics = "com.yammer" %% "metrics" % "1.0.3" withSources()
+  val metrics = "com.yammer" %% "metrics" % "1.0.5"
   val guild = "com.codahale" %% "guild" % "0.1.1"
   val jetlang = "org.jetlang" % "jetlang" % "0.2.0" withSources()
   val pool = "commons-pool" % "commons-pool" % "1.5.4" withSources() intransitive()
@@ -26,7 +27,8 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   val cc = "commons-collections" % "commons-collections" % "3.2.1"
   val lang = "commons-lang" % "commons-lang" % "2.4"
   
-  val mockito = "org.mockito" % "mockito-all" % "1.8.1" % "test" withSources()
+  val mockito = "org.mockito" % "mockito-all" % "1.8.4" % "test"
+  val specs = "org.scala-tools.testing" % "specs-1.6.5-snapshot_2.8.0.RC6" % "1.6.5-SNAPSHOT" % "test"
 }
 
 /**

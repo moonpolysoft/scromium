@@ -22,27 +22,27 @@ class Connection(val socket : TSocket) extends Client {
     socket.close
   }
   
-  override def get(ks : String, k : String, cp : ColumnPath, c : ConsistencyLevel) : ColumnOrSuperColumn = {
+  override def inst_get(ks : String, k : String, cp : ColumnPath, c : ConsistencyLevel) : ColumnOrSuperColumn = {
     client.get(ks, k, cp, c)
   }
   
-  override def multiget_slice(ks : String, keys : List[String], cp : ColumnParent, p : SlicePredicate, c : ConsistencyLevel) : Map[String,List[ColumnOrSuperColumn]] = {
+  override def inst_multiget_slice(ks : String, keys : List[String], cp : ColumnParent, p : SlicePredicate, c : ConsistencyLevel) : Map[String,List[ColumnOrSuperColumn]] = {
     client.multiget_slice(ks, keys, cp, p, c)
   }
   
-  override def get_range_slices(ks : String, cp : ColumnParent, p : SlicePredicate, kr : KeyRange, c : ConsistencyLevel) : List[KeySlice] = {
+  override def inst_get_range_slices(ks : String, cp : ColumnParent, p : SlicePredicate, kr : KeyRange, c : ConsistencyLevel) : List[KeySlice] = {
     client.get_range_slices(ks, cp, p, kr, c)
   }
   
-  override def insert(ks : String, key : String, cp : ColumnPath, value : Array[Byte], timestamp : Long, c : ConsistencyLevel) {
+  override def inst_insert(ks : String, key : String, cp : ColumnPath, value : Array[Byte], timestamp : Long, c : ConsistencyLevel) {
     client.insert(ks, key, cp, value, timestamp, c)
   }
   
-  override def remove(ks : String, key : String, cp : ColumnPath, timestamp : Long, c : ConsistencyLevel) {
+  override def inst_remove(ks : String, key : String, cp : ColumnPath, timestamp : Long, c : ConsistencyLevel) {
     client.remove(ks, key, cp, timestamp, c)
   }
   
-  override def batch_mutate(ks : String, map : Map[String,Map[String,List[Mutation]]], c : ConsistencyLevel) {
+  override def inst_batch_mutate(ks : String, map : Map[String,Map[String,List[Mutation]]], c : ConsistencyLevel) {
     client.batch_mutate(ks, map, c)
   }
 }

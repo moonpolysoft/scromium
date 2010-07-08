@@ -8,7 +8,7 @@ import scala.collection.JavaConversions._
 import scromium.util.HexString._
 import scromium.util.Log
 
-class OpMap extends HashMap[String, MuteMap] {
+class OpMap extends HashMap[String, MuteMap](100) {
   def get(key : String) : MuteMap = {
     super.get(key) match {
       case null =>
@@ -20,11 +20,11 @@ class OpMap extends HashMap[String, MuteMap] {
   }
 }
 
-class MuteMap extends HashMap[String, List[thrift.Mutation]] {
+class MuteMap extends HashMap[String, List[thrift.Mutation]](100) {
   def get(key : String) : List[thrift.Mutation] ={
     super.get(key) match {
       case null =>
-        val a = new ArrayList[thrift.Mutation]
+        val a = new ArrayList[thrift.Mutation](20)
         put(key,a)
         a
       case v => v

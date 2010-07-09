@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit
 import java.util.List
 import java.util.Map
 
-abstract class Client extends JmxManaged {
+object ClientStats extends JmxManaged {
   val getTimer = new Timer
   val multigetSliceTimer = new Timer
   val getRangeSlicesTimer = new Timer
@@ -37,7 +37,11 @@ abstract class Client extends JmxManaged {
     jmx.addTimer("remove_latency", removeTimer, TimeUnit.MILLISECONDS)
     jmx.addTimer("batch_mutate_latency", batchMutateTimer, TimeUnit.MILLISECONDS)
   }
-  
+}
+
+import ClientStats._
+
+abstract class Client {
   def inst_get(ks : String, k : String, cp : ColumnPath, c : ConsistencyLevel) : ColumnOrSuperColumn
   def inst_multiget_slice(ks : String, keys : List[String], cp : ColumnParent, p : SlicePredicate, c : ConsistencyLevel) : Map[String,List[ColumnOrSuperColumn]]
   def inst_get_range_slices(ks : String, cp : ColumnParent, p : SlicePredicate, kr : KeyRange, c : ConsistencyLevel) : List[KeySlice]

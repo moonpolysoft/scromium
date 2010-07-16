@@ -28,7 +28,7 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   val lang = "commons-lang" % "commons-lang" % "2.4"
   
   val mockito = "org.mockito" % "mockito-all" % "1.8.4" % "test"
-  val specs = "org.scala-tools.testing" % "specs-1.6.5-snapshot_2.8.0.RC6" % "1.6.5-SNAPSHOT" % "test"
+  val specs = "org.scala-tools.testing" %% "specs" % "1.6.5-SNAPSHOT" % "test"
 }
 
 /**

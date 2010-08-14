@@ -78,7 +78,7 @@ class RowBatchBuilder {
     mutation.column_or_supercolumn = container
     container.column = column
     column.name = cAry
-    column.timestamp = timestamp
+    column.clock = new thrift.Clock(timestamp)
     column.value = vSer.serialize(value)
     muteMap.get(cf).add(mutation)
     this
@@ -109,7 +109,7 @@ class RowBatchBuilder {
     }
     val column = new thrift.Column
     column.name = cSer.serialize(c)
-    column.timestamp = timestamp
+    column.clock = new thrift.Clock(timestamp)
     column.value = vSer.serialize(value)
     container.column_or_supercolumn.super_column.columns.add(column)
     this

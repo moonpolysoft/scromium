@@ -9,7 +9,7 @@ import org.apache.commons.codec.binary.Hex
  */
 case class GetColumn(val name : Array[Byte], val value : Array[Byte], val timestamp : Long) extends Container {
   def this(column : thrift.Column) {
-    this(column.name, column.value, column.timestamp)
+    this(column.name, column.value, column.clock.timestamp)
   }
   
   def this(result : thrift.ColumnOrSuperColumn) {

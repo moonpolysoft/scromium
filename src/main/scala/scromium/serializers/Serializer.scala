@@ -15,6 +15,12 @@ object Serializers {
     def serialize(seq : Seq[Byte]) = seq.toArray
     def deserialize(ary : Array[Byte]) = Some(ary.toSeq)
   }
+  
+  implicit object LongSerializer extends Serializer[Long] with Deserializer[Long] with 
+      IntegralSerializer with IntegralDeserializer {
+    def serialize(n : Long) = longToBytes(n)
+    def deserialize(ary : Array[Byte]) = Some(bytesToLong(ary))
+  }
 }
 
 trait Serializer[-T] {

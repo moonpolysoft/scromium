@@ -129,9 +129,9 @@ class Cassandra(connPool : ConnectionPool) {
       server.unregisterMBean(name)
     }
     
-    FileUtils.deleteDir(new File(DatabaseDescriptor.getLogFileLocation))
+    FileUtils.deleteRecursive(new File(DatabaseDescriptor.getCommitLogLocation))
     for (dir <- DatabaseDescriptor.getAllDataFileLocations) {
-      FileUtils.deleteDir(new File(dir))
+      FileUtils.deleteRecursive(new File(dir))
     }
   }
 }

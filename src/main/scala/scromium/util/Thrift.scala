@@ -6,7 +6,7 @@ import scala.collection.JavaConversions._
 object Thrift {
   def columnContainer(c : Array[Byte], value : Array[Byte], timestamp : Long) : ColumnOrSuperColumn = {
     val container = new ColumnOrSuperColumn
-    val column = new Column(c,value,timestamp)
+    val column = new Column(c,value,new Clock(timestamp))
     container.column = column
     container
   }
@@ -15,7 +15,7 @@ object Thrift {
     val container = new ColumnOrSuperColumn
     val superColumn = new SuperColumn(sc, new java.util.ArrayList[Column])
     columns.foreach { case (c,v,t) =>
-      val column = new Column(c,v,t)
+      val column = new Column(c,v,new Clock(t))
       superColumn.columns.add(column)
     }
     container.super_column = superColumn
@@ -36,7 +36,7 @@ object Thrift {
     mutation
   }
   
-  def keyRange(startKey : String, endKey : String, count : Int) : KeyRange = {
+  def keyRange(startKey : Array[Byte], endKey : Array[Byte], count : Int) : KeyRange = {
     val kr = new KeyRange
     kr.start_key = startKey
     kr.end_key = endKey

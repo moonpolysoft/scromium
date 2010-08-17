@@ -1,4 +1,4 @@
-package scromium.api
+package scromium
 
 import org.apache.cassandra.thrift.ConsistencyLevel
 

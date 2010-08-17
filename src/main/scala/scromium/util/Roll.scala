@@ -1,7 +1,10 @@
 package scromium.util
 
+import scala.annotation.tailrec
+
 object Roll {
   def roll(str : String) : String = {
+    @tailrec
     def reverseRoll(str : List[Char], acc: List[Char]) : List[Char] = str match {
       case Nil => Character.MIN_VALUE :: acc
       case Character.MAX_VALUE :: tail =>

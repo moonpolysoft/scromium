@@ -1,5 +1,6 @@
-package scromium.connection
+/*package scromium.thrift
 
+import scromium.client._
 import org.apache.thrift.transport.TSocket
 import org.apache.thrift.protocol.TBinaryProtocol
 import org.apache.cassandra.thrift._
@@ -8,7 +9,7 @@ import java.util.Map
 
 class Connection(val socket : TSocket) extends Client {
   private val protocol = new TBinaryProtocol(socket)
-  protected[connection] val client = new Cassandra.Client(protocol)
+  protected[thrift] val client = new Cassandra.Client(protocol)
   
   def isOpen() : Boolean = {socket.isOpen()}
   
@@ -46,3 +47,4 @@ class Connection(val socket : TSocket) extends Client {
     client.batch_mutate(ks, map, c)
   }
 }
+*/

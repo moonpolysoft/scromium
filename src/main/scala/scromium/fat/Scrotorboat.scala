@@ -1,4 +1,4 @@
-package scromium.connection
+/*package scromium.connection
 
 import scromium.util.JSON
 import scromium.util.Log
@@ -52,4 +52,4 @@ class ScrotorboatClient extends Client {
   override def inst_batch_mutate(ks : String, map : JMap[String,JMap[String,List[Mutation]]], c : ConsistencyLevel) {
     client.batch_mutate(ks, map, c)
   }
-}
+}*/

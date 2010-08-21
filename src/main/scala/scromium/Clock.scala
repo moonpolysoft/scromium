@@ -1,4 +1,4 @@
-package scromium.clocks
+package scromium
 
 
 /**

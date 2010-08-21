@@ -4,7 +4,7 @@ import scromium._
 import scromium.client._
 import org.apache.cassandra.thrift
 import org.apache.thrift.transport.{TTransport, TTransportException}
-import java.util.{HashMap, List, ArrayList}
+import java.util.{HashMap, List => JList, ArrayList}
 import scala.collection.JavaConversions._
 
 class ThriftConnection(socket : TTransport, client : thrift.Cassandra.Client) extends ThriftClient(client) {
@@ -23,7 +23,7 @@ class ThriftConnection(socket : TTransport, client : thrift.Cassandra.Client) ex
 }
 
 class ThriftClient(cass : thrift.Cassandra.Iface) extends Client {
-  type MuteMap = HashMap[Array[Byte], List[thrift.Mutation]]
+  type MuteMap = HashMap[Array[Byte], JList[thrift.Mutation]]
   
     def put(rows : List[Write[Column]], c : WriteConsistency) {
       
@@ -33,15 +33,15 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client {
       
     }
     
-    def delete(rows : List[Delete], c : WriteConsistency) {
+    def delete(delete : Delete, c : WriteConsistency) {
       
     }
     
-    def get(reads : List[Read], c : ReadConsistency) : RowIterator[Column] = {
+    def get(read : Read, c : ReadConsistency) : RowIterator[Column] = {
       null
     }
     
-    def superGet(reads : List[Read], c : ReadConsistency) : RowIterator[SuperColumn] = {
+    def superGet(read : Read, c : ReadConsistency) : RowIterator[SuperColumn] = {
       null
     }
     

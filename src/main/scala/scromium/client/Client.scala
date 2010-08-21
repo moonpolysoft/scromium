@@ -4,8 +4,6 @@ import scromium._
 import com.yammer.jmx._
 import com.yammer.metrics._
 import java.util.concurrent.TimeUnit
-import java.util.List
-import java.util.Map
 
 object ClientStats extends JmxManaged {
   val getTimer = new Timer
@@ -37,9 +35,9 @@ import ClientStats._
 trait Client {
   def put(rows : List[Write[Column]], c : WriteConsistency)
   def superPut(rows : List[Write[SuperColumn]], c : WriteConsistency)
-  def delete(rows : List[Delete], c : WriteConsistency)
-  def get(reads : List[Read], c : ReadConsistency) : RowIterator[Column]
-  def superGet(reads : List[Read], c : ReadConsistency) : RowIterator[SuperColumn]
+  def delete(delete : Delete, c : WriteConsistency)
+  def get(read : Read, c : ReadConsistency) : RowIterator[Column]
+  def superGet(read : Read, c : ReadConsistency) : RowIterator[SuperColumn]
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column]
   def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn]*/
 }
@@ -55,19 +53,19 @@ class JMXClient(cl : Client) extends Client {
     putTimer.time { cl.superPut(rows, c) }
   }
   
-  def delete(rows : List[Delete], c : WriteConsistency) {
-    deleteLoad.mark(rows.size)
-    deleteTimer.time { cl.delete(rows, c) }
+  def delete(delete : Delete, c : WriteConsistency) {
+    deleteLoad.mark(delete.keys.size)
+    deleteTimer.time { cl.delete(delete, c) }
   }
   
-  def get(reads : List[Read], c : ReadConsistency) : RowIterator[Column] = {
-    getLoad.mark(reads.size)
-    getTimer.time { cl.get(reads, c) }
+  def get(read : Read, c : ReadConsistency) : RowIterator[Column] = {
+    getLoad.mark(read.keys.size)
+    getTimer.time { cl.get(read, c) }
   }
   
-  def superGet(reads : List[Read], c : ReadConsistency) : RowIterator[SuperColumn] = {
-    getLoad.mark(reads.size)
-    getTimer.time { cl.superGet(reads, c) }
+  def superGet(read : Read, c : ReadConsistency) : RowIterator[SuperColumn] = {
+    getLoad.mark(read.keys.size)
+    getTimer.time { cl.superGet(read, c) }
   }
   
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column] = {

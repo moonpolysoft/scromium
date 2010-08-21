@@ -20,16 +20,16 @@ class ColumnFamily(ksName : String,
     
   def batch(clock : Clock = defaultClock) = new Put(clock)
     
-  def get(selector : Selector, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
-    null
+  def get(selector : Readable, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
+    provider.withClient(_.get(selector.toRead(cfName), consistency))
   }
   
-  def delete(selector : Selector, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
-    
+  def delete(selector : Deletable, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+    provider.withClient(_.delete(selector.toDelete(cfName, clock), consistency))
   }
   
-  def put(put : Put, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
-    
+  def put(put : Put, consistency : WriteConsistency = defaultW) {
+    provider.withClient(_.put(put.toWrites(cfName), consistency))
   }
 }
 
@@ -48,15 +48,15 @@ class SuperColumnFamily(ksName : String,
     
   def batch(clock : Clock = defaultClock) = new SuperPut(clock)
 
-  def get(selector : SuperSelector, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
-    null
+  def get(selector : SuperSelector, consistency : ReadConsistency = defaultR) : RowIterator[SuperColumn] = {
+    provider.withClient(_.superGet(selector.toRead(cfName), consistency))
   }
 
   def delete(selector : SuperSelector, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
-    
+    provider.withClient(_.delete(selector.toDelete(cfName,clock), consistency))
   }
 
   def put(put : SuperPut, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
-    
+    provider.withClient(_.superPut(put.toWrites(cfName), consistency))
   }
 }

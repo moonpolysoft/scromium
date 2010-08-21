@@ -3,6 +3,7 @@ package scromium
 import scala.collection.mutable.ArrayBuffer
 import serializers._
 import scromium.clocks._
+import client._
 
 class Put(clock : Clock) {
   val rows = new ArrayBuffer[RowBuilder]
@@ -12,6 +13,8 @@ class Put(clock : Clock) {
     rows += row
     row
   }
+  
+  def toWrites(cf : String) = rows.map(_.toWrite(cf)).toList
 }
 
 class SuperPut(clock : Clock) {
@@ -22,4 +25,6 @@ class SuperPut(clock : Clock) {
     rows += row
     row
   }
+  
+  def toWrites(cf : String) = rows.map(_.toWrite(cf)).toList
 }

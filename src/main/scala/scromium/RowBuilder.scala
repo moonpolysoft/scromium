@@ -2,6 +2,7 @@ package scromium
 
 import serializers._
 import clocks._
+import client._
 import scala.collection.mutable.ArrayBuffer
 
 class RowBuilder(val key : Array[Byte], clock : Clock) {
@@ -13,6 +14,8 @@ class RowBuilder(val key : Array[Byte], clock : Clock) {
     columns += Column(cSer.serialize(column), vSer.serialize(value), timestamp, ttl)
     this
   }
+  
+  def toWrite(cf : String) = new Write(key, cf, columns.toList)
 }
 
 class SuperRowBuilder(val key : Array[Byte], clock : Clock) {
@@ -23,4 +26,6 @@ class SuperRowBuilder(val key : Array[Byte], clock : Clock) {
     superColumns += sc
     sc
   }
+  
+  def toWrite(cf : String) = new Write(key, cf, superColumns.map(_.toSuperColumn).toList)
 }

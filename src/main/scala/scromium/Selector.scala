@@ -1,8 +1,17 @@
 package scromium
 
 import serializers._
+import client._
 
-class Selector(val rows : List[Array[Byte]]) {
+trait Readable {
+  def toRead(cf : String) : Read
+}
+
+trait Deletable {
+  def toDelete(cf : String, clock : Clock) : Delete
+}
+
+class Selector(val rows : List[Array[Byte]]) extends Readable with Deletable {
   
   def column[C](column : C)(implicit ser : Serializer[C]) =
     new ColumnSelector(rows, List(ser.serialize(column)))
@@ -12,9 +21,13 @@ class Selector(val rows : List[Array[Byte]]) {
     
   def slice(slice : Slice) = 
     new SliceSelector(rows, slice)
+    
+  def toRead(cf : String) = new Read(rows, cf)
+  
+  def toDelete(cf : String, clock : Clock) = new Delete(rows, cf, clock=clock)
 }
 
-class SuperSelector(rows : List[Array[Byte]]) {
+class SuperSelector(rows : List[Array[Byte]]) extends Readable with Deletable {
   
   def column[C](column : C)(implicit ser : Serializer[C]) =
     new SuperColumnSelector(rows, ser.serialize(column))
@@ -24,15 +37,39 @@ class SuperSelector(rows : List[Array[Byte]]) {
 
   def slice(slice : Slice) = 
     new SliceSelector(rows, slice)
+    
+  def toRead(cf : String) = new Read(rows, cf)
+  
+  def toDelete(cf : String, clock : Clock) = new Delete(rows, cf, clock=clock)
 }
 
 //privatish
 
-class ColumnSelector(val rows : List[Array[Byte]], val column : List[Array[Byte]])
+class ColumnSelector(
+  val rows : List[Array[Byte]], 
+  val columns : List[Array[Byte]]) extends Readable with Deletable {
+  
+  def toRead(cf : String) =
+    new Read(rows, cf, Some(columns))
+  
+  def toDelete(cf : String, clock : Clock) = 
+    new Delete(rows, cf, Some(columns), clock=clock)
+}
 
-class SliceSelector(val rows : List[Array[Byte]], val slice : Slice)
+class SliceSelector(
+  val rows : List[Array[Byte]], 
+  val slice : Slice) extends Readable with Deletable {
+  
+  def toRead(cf : String) =
+    new Read(rows, cf, slice=Some(slice))
+    
+  def toDelete(cf : String, clock : Clock) =
+    new Delete(rows, cf, slice=Some(slice), clock=clock)
+}
 
-class SuperColumnSelector(val rows : List[Array[Byte]], val column : Array[Byte]) {
+class SuperColumnSelector(
+  val rows : List[Array[Byte]], 
+  val column : Array[Byte]) extends Readable with Deletable {
   
   def subcolumn[C](subcolumn : C)(implicit ser : Serializer[C]) =
     new SubColumnSelector(rows, column, List(ser.serialize(subcolumn)))
@@ -42,8 +79,34 @@ class SuperColumnSelector(val rows : List[Array[Byte]], val column : Array[Byte]
     
   def slice(slice : Slice) =
     new SubColumnSliceSelector(rows, column, slice)
+    
+  def toRead(cf : String) =
+    new Read(rows, cf, Some(List(column)))
+    
+  def toDelete(cf : String, clock : Clock) =
+    new Delete(rows, cf, Some(List(column)), clock=clock)
 }
 
-class SubColumnSelector(val rows : List[Array[Byte]], val column : Array[Byte], val subColumn : List[Array[Byte]])
+class SubColumnSelector(
+  val rows : List[Array[Byte]], 
+  val column : Array[Byte], 
+  val subColumns : List[Array[Byte]]) extends Readable with Deletable {
+  
+  def toRead(cf : String) =
+    new Read(rows, cf, Some(List(column)), subColumns = Some(subColumns))
+  
+  def toDelete(cf : String, clock : Clock) =
+    new Delete(rows, cf, Some(List(column)), subColumns = Some(subColumns), clock=clock)
+}
 
-class SubColumnSliceSelector(val rows : List[Array[Byte]], val column : Array[Byte], val slice : Slice)
+class SubColumnSliceSelector(
+  val rows : List[Array[Byte]], 
+  val column : Array[Byte], 
+  val slice : Slice) extends Readable with Deletable {
+  
+  def toRead(cf : String) =
+    new Read(rows, cf, Some(List(column)), slice = Some(slice))
+    
+  def toDelete(cf : String, clock : Clock) =
+    new Delete(rows, cf, Some(List(column)), slice=Some(slice), clock=clock)
+}

@@ -13,4 +13,6 @@ class SuperColumnBuilder(val name : Array[Byte], clock : Clock) {
     columns += Column(cSer.serialize(column), vSer.serialize(value), timestamp, ttl)
     this
   }
+  
+  def toSuperColumn = new SuperColumn(name, columns.toList)
 }

@@ -1,6 +1,7 @@
 package scromium.clocks
 
 import java.util.concurrent.atomic.AtomicLong
+import scromium.Clock
 
 /**
  * A concurrent, strictly-increasing clock.

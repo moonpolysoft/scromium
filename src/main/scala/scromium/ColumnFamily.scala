@@ -3,46 +3,60 @@ package scromium
 import serializers._
 import client.ClientProvider
 import scromium.util.Log
+import clocks._
 
 class ColumnFamily(ksName : String,
     cfName : String,
     provider : ClientProvider,
     defaultR : ReadConsistency,
-    defaultW : WriteConsistency) {
+    defaultW : WriteConsistency,
+    defaultClock : Clock) {
     
-  def put[K,N,V](key : K, name : N, value : V)(
-    implicit kSer : Serializer[K],
-             nSer : Serializer[N],
-             vSer : Serializer[V]) {
-    put(key,name,value,System.currentTimeMillis)(kSer,nSer,vSer)
-  }
-  
-  def put[K,N,V](key : K, name : N, value : V, timestamp : Long)(
-    implicit kSer : Serializer[K],
-             nSer : Serializer[N],
-             vSer : Serializer[V]) {
+  def selector[R](row : R)(implicit ser : Serializer[R]) = 
+    new Selector(List(ser.serialize(row)))
     
-  }
-  
-  def get(cmd : Get) {
+  def selector[R](rows : List[R])(implicit ser : Serializer[R]) =
+    new Selector(rows.map(ser.serialize(_)))
     
-  }
-  
-  def delete(cmd : Delete) {
+  def batch(clock : Clock = defaultClock) = new Put(clock)
     
-  }
-  
-  def scan(cmd : Scanner[Column]) : RowIterator[Column] = {
+  def get(selector : Selector, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
     null
-  } 
+  }
+  
+  def delete(selector : Selector, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+    
+  }
+  
+  def put(put : Put, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+    
+  }
 }
 
-/*def SuperColumnFamily(ksName : String,
+class SuperColumnFamily(ksName : String,
     cfName : String,
     provider : ClientProvider,
     defaultR : ReadConsistency,
-    defaultW : WriterConsistency) {
-  
-  def put()
-  
-}*/
+    defaultW : WriteConsistency,
+    defaultClock : Clock) {
+
+  def selector[R](row : R)(implicit ser : Serializer[R]) = 
+    new SuperSelector(List(ser.serialize(row)))
+
+  def selector[R](rows : List[R])(implicit ser : Serializer[R]) =
+    new SuperSelector(rows.map(ser.serialize(_)))
+    
+  def batch(clock : Clock = defaultClock) = new SuperPut(clock)
+
+  def get(selector : SuperSelector, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
+    null
+  }
+
+  def delete(selector : SuperSelector, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+    
+  }
+
+  def put(put : SuperPut, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+    
+  }
+}

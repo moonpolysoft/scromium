@@ -2,7 +2,7 @@ package scromium.thrift
 
 import org.apache.commons.pool._
 import org.apache.cassandra.thrift.Cassandra
-import org.apache.thrift.transport.{TSocket, TTransportException}
+import org.apache.thrift.transport.{TTransport, TSocket, TTransportException}
 import org.apache.thrift.protocol.TBinaryProtocol
 import scromium.util.Log
 
@@ -42,13 +42,13 @@ class ThriftClientFactory(var hosts : Seq[String],
     // noop
   }
   
-  def createClient(socket : TSocket) : Cassandra.Client = {
+  def createClient(socket : TTransport) : Cassandra.Client = {
     val protocol = new TBinaryProtocol(socket)
     new Cassandra.Client(protocol)
   }
   
-  def createSocket : TSocket = {
-    def createSocket(liveHosts : Seq[String]) : TSocket = liveHosts match {
+  def createSocket : TTransport = {
+    def createSocket(liveHosts : Seq[String]) : TTransport = liveHosts match {
       case Nil => throw new Exception("No cassandra hosts alive currently.")
       case host :: tail =>
         try {

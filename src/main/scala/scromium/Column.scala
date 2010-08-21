@@ -11,6 +11,6 @@ case class Column(val name : Array[Byte],
   def nameAs[T](implicit des : Deserializer[T]) = des.deserialize(name)
   
   override def toString() : String = {
-    "GetColumn(" + Hex.encodeHexString(name) + "," + Hex.encodeHexString(value) + "," + timestamp + ")"
+    "Column(" + Hex.encodeHexString(name) + "," + Hex.encodeHexString(value) + "," + timestamp + ")"
   }
 }

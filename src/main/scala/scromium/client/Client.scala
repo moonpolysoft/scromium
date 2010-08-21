@@ -35,48 +35,42 @@ object ClientStats extends JmxManaged {
 import ClientStats._
 
 trait Client {
-  def put(rows : List[Row[Column]], c : WriteConsistency)
-  def superPut(rows : List[Row[SuperColumn]], c : WriteConsistency)
-  def delete(rows : List[RowDeletion[Column]], c : WriteConsistency)
-  def superDelete(rows : List[RowDeletion[SuperColumn]], c : WriteConsistency)
-  def get(reads : List[Read[Column]], c : ReadConsistency) : RowIterator[Column]
-  def superGet(reads : List[Read[SuperColumn]], c : ReadConsistency) : RowIterator[SuperColumn]
-  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column]
-  def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn]
+  def put(rows : List[Write[Column]], c : WriteConsistency)
+  def superPut(rows : List[Write[SuperColumn]], c : WriteConsistency)
+  def delete(rows : List[Delete], c : WriteConsistency)
+  def get(reads : List[Read], c : ReadConsistency) : RowIterator[Column]
+  def superGet(reads : List[Read], c : ReadConsistency) : RowIterator[SuperColumn]
+/*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column]
+  def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn]*/
 }
 
 class JMXClient(cl : Client) extends Client {
-  def put(rows : List[Row[Column]], c : WriteConsistency) {
+  def put(rows : List[Write[Column]], c : WriteConsistency) {
     putLoad.mark(rows.size)
     putTimer.time { cl.put(rows, c) }
   }
   
-  def superPut(rows : List[Row[SuperColumn]], c : WriteConsistency) {
+  def superPut(rows : List[Write[SuperColumn]], c : WriteConsistency) {
     putLoad.mark(rows.size)
     putTimer.time { cl.superPut(rows, c) }
   }
   
-  def delete(rows : List[RowDeletion[Column]], c : WriteConsistency) {
+  def delete(rows : List[Delete], c : WriteConsistency) {
     deleteLoad.mark(rows.size)
     deleteTimer.time { cl.delete(rows, c) }
   }
   
-  def superDelete(rows : List[RowDeletion[SuperColumn]], c : WriteConsistency) {
-    deleteLoad.mark(rows.size)
-    deleteTimer.time { cl.superDelete(rows, c) }
-  }
-  
-  def get(reads : List[Read[Column]], c : ReadConsistency) : RowIterator[Column] = {
+  def get(reads : List[Read], c : ReadConsistency) : RowIterator[Column] = {
     getLoad.mark(reads.size)
     getTimer.time { cl.get(reads, c) }
   }
   
-  def superGet(reads : List[Read[SuperColumn]], c : ReadConsistency) : RowIterator[SuperColumn] = {
+  def superGet(reads : List[Read], c : ReadConsistency) : RowIterator[SuperColumn] = {
     getLoad.mark(reads.size)
     getTimer.time { cl.superGet(reads, c) }
   }
   
-  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column] = {
+/*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column] = {
     scanLoad.mark(1)
     scanTimer.time { cl.scan(scanner, c) }
   }
@@ -84,5 +78,5 @@ class JMXClient(cl : Client) extends Client {
   def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn] = {
     scanLoad.mark(1)
     scanTimer.time { cl.superScan(scanner, c) }
-  }
+  }*/
 }

@@ -1,3 +1,3 @@
 package scromium
 
-class RowIterator[T]()
+abstract class RowIterator[T <: Columnar] extends Iterator[Row[T]]

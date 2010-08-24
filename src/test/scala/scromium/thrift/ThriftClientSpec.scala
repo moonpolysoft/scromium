@@ -9,12 +9,12 @@ import org.mockito.Matchers._
 import scala.collection.JavaConversions._
 import scromium.clocks._
 
-class ThriftClientSpec extends Specification with Mockito {
+class ThriftClientSpec extends Specification with Mockito with TestHelper {
   "ThriftClient" should {
     var cassandra : Cassandra = null
     val clock = MicrosecondEpochClock
     
-    doBefore { cassandra = Cassandra.startTest }
+    doBefore { cassandra = Cassandra.startTest; setupSchema(cassandra) }
     doAfter { cassandra.teardownTest }
     
     "execute put and get commands" in {

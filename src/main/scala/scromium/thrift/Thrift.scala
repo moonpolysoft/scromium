@@ -3,6 +3,7 @@ package scromium.thrift
 import scromium.client.{Delete, Read}
 import org.apache.cassandra.thrift._
 import scala.collection.JavaConversions._
+import scromium.meta._
 
 object Thrift {
   def column(c : scromium.Column) : Column = {
@@ -117,5 +118,30 @@ object Thrift {
       slicePredicate(columns)
     case _ =>
       throw new Exception("incomplete read command : " + r)
+  }
+  
+  def ksDef(ks : KeyspaceDef) : KsDef = {
+    val ksdef = new KsDef(ks.name, 
+      ks.strategyClass, 
+      ks.replicationFactor, 
+      ks.cfDefs.map(cfDef(_)))
+    for(options <- ks.strategyOptions) ksdef.strategy_options = options
+    ksdef
+  }
+  
+  def cfDef(cf : ColumnFamilyDef) : CfDef = {
+    val cfdef = new CfDef(cf.keyspace,cf.name)
+    cfdef.column_type = cf.columnType
+    cfdef.clock_type = cf.clockType
+    cfdef.comparator_type = cf.comparatorType
+    cfdef.subcomparator_type = cf.subComparatorType
+    cfdef.reconciler = cf.reconciler
+    cfdef.comment = cf.comment
+    cfdef.row_cache_size = cf.rowCacheSize
+    cfdef.preload_row_cache = cf.preloadRowCache
+    cfdef.key_cache_size = cf.keyCacheSize
+    cfdef.read_repair_chance = cf.readRepairChance
+    cfdef.gc_grace_seconds = cf.gcGraceSeconds
+    cfdef
   }
 }

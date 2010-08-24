@@ -1,6 +1,7 @@
 package scromium.client
 
 import scromium._
+import scromium.meta._
 import com.yammer.jmx._
 import com.yammer.metrics._
 import java.util.concurrent.TimeUnit
@@ -33,40 +34,53 @@ object ClientStats extends JmxManaged {
 import ClientStats._
 
 trait Client {
-  def put(rows : List[Write[Column]], c : WriteConsistency)
-  def superPut(rows : List[Write[SuperColumn]], c : WriteConsistency)
-  def delete(delete : Delete, c : WriteConsistency)
-  def get(read : Read, c : ReadConsistency) : RowIterator[Column]
-  def superGet(read : Read, c : ReadConsistency) : RowIterator[SuperColumn]
+  def put(keyspace : String, rows : List[Write[Column]], c : WriteConsistency)
+  def superPut(keyspace : String, rows : List[Write[SuperColumn]], c : WriteConsistency)
+  def delete(keyspace : String, delete : Delete, c : WriteConsistency)
+  def get(keyspace : String, read : Read, c : ReadConsistency) : RowIterator[Column]
+  def superGet(keyspace : String, read : Read, c : ReadConsistency) : RowIterator[SuperColumn]
+  def createKeyspace(keyspace : KeyspaceDef)
+  def createColumnFamily(cf : ColumnFamilyDef)
+  def dropKeyspace(name : String)
+  def renameKeyspace(from : String, to : String)
+  def dropColumnFamily(name : String)
+  def renameColumnFamily(from : String, to : String)
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column]
   def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn]*/
 }
 
 class JMXClient(cl : Client) extends Client {
-  def put(rows : List[Write[Column]], c : WriteConsistency) {
+  def put(keyspace : String, rows : List[Write[Column]], c : WriteConsistency) {
     putLoad.mark(rows.size)
-    putTimer.time { cl.put(rows, c) }
+    putTimer.time { cl.put(keyspace, rows, c) }
   }
   
-  def superPut(rows : List[Write[SuperColumn]], c : WriteConsistency) {
+  def superPut(keyspace : String, rows : List[Write[SuperColumn]], c : WriteConsistency) {
     putLoad.mark(rows.size)
-    putTimer.time { cl.superPut(rows, c) }
+    putTimer.time { cl.superPut(keyspace, rows, c) }
   }
   
-  def delete(delete : Delete, c : WriteConsistency) {
+  def delete(keyspace : String, delete : Delete, c : WriteConsistency) {
     deleteLoad.mark(delete.keys.size)
-    deleteTimer.time { cl.delete(delete, c) }
+    deleteTimer.time { cl.delete(keyspace, delete, c) }
   }
   
-  def get(read : Read, c : ReadConsistency) : RowIterator[Column] = {
+  def get(keyspace : String, read : Read, c : ReadConsistency) : RowIterator[Column] = {
     getLoad.mark(read.keys.size)
-    getTimer.time { cl.get(read, c) }
+    getTimer.time { cl.get(keyspace, read, c) }
   }
   
-  def superGet(read : Read, c : ReadConsistency) : RowIterator[SuperColumn] = {
+  def superGet(keyspace : String, read : Read, c : ReadConsistency) : RowIterator[SuperColumn] = {
     getLoad.mark(read.keys.size)
-    getTimer.time { cl.superGet(read, c) }
+    getTimer.time { cl.superGet(keyspace, read, c) }
   }
+  
+  def createKeyspace(keyspace : KeyspaceDef) = cl.createKeyspace(keyspace)
+  def createColumnFamily(cf : ColumnFamilyDef) = cl.createColumnFamily(cf)
+  def dropKeyspace(name : String) = cl.dropKeyspace(name)
+  def renameKeyspace(from : String, to : String) = cl.renameKeyspace(from, to)
+  def dropColumnFamily(name : String) = cl.dropColumnFamily(name)
+  def renameColumnFamily(from : String, to : String) = cl.renameColumnFamily(from, to)
   
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column] = {
     scanLoad.mark(1)

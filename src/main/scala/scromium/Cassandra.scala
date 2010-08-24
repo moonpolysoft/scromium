@@ -110,6 +110,9 @@ object Cassandra extends Log {
 class Cassandra(provider : ClientProvider) {
   def keyspace(name : String) = new Keyspace(name, provider)
   
+  
+  def admin = new Admin(provider)
+  
   def teardownTest() {
     
     MessagingService.shutdown()

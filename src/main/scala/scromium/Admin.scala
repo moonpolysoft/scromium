@@ -27,7 +27,10 @@ class Admin(provider : ClientProvider) {
   }
   
   def dropKeyspace(name : String) {
-    provider.withClient(_.dropKeyspace(name))
+    provider.withClient { client =>
+      val spaces = client.listKeyspaces
+      if (spaces.contains(name)) { client.dropKeyspace(name) }
+    }
   }
   
   def renameKeyspace(from : String, to : String) {
@@ -40,5 +43,9 @@ class Admin(provider : ClientProvider) {
   
   def renameColumnFamily(from : String, to : String) {
     provider.withClient(_.renameColumnFamily(from, to))
+  }
+  
+  def keyspaces : Set[String] = {
+    provider.withClient(_.listKeyspaces)
   }
 }

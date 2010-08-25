@@ -12,7 +12,8 @@ trait TestHelper {
     cass.admin { admin =>
       admin.dropKeyspace("Keyspace")
       admin.keyspace("Keyspace") { ks =>
-        ks.columnFamily("ColumnFamily") { cf => cf }
+        ks.replicationFactor(1)
+        ks.columnFamily("ColumnFamily")
         ks.superColumnFamily("SuperColumnFamily")
         admin.create(ks)
       }

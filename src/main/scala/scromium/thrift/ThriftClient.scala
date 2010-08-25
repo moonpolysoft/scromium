@@ -3,7 +3,7 @@ package scromium.thrift
 import scromium._
 import scromium.meta._
 import scromium.client._
-import scromium.util.DefaultHashMap
+import scromium.util.{DefaultHashMap, ArrayKeyedHashMap}
 import org.apache.cassandra.thrift
 import org.apache.thrift.transport.{TTransport, TTransportException}
 import java.util.{Map => JMap, List => JList}
@@ -33,7 +33,7 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client {
     cass.set_keyspace(keyspace)
     val rowMap = createRowMap
     writes.foreach { write =>
-      val mutes = rowMap.get(write.key).get(write.cf)
+      val mutes = rowMap(write.key)(write.cf)
       mutes ++= write.columns.map(columnMutation(_))
     }
     cass.batch_mutate(rowMap, c.thrift)
@@ -43,7 +43,7 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client {
     cass.set_keyspace(keyspace)
     val rowMap = createRowMap
     writes.foreach { write =>
-      val mutes = rowMap.get(write.key).get(write.cf)
+      val mutes = rowMap(write.key)(write.cf)
       mutes ++= write.columns.map(superColumnMutation(_))
     }
     cass.batch_mutate(rowMap, c.thrift)
@@ -54,7 +54,7 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client {
     val rowMap = createRowMap
     val mutation = deleteMutation(delete)
     delete.keys.foreach { key =>
-      rowMap.get(key).get(delete.cf) += mutation
+      rowMap(key)(delete.cf) += mutation
     }
     cass.batch_mutate(rowMap, c.thrift)
   }
@@ -99,11 +99,15 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client {
     cass.system_rename_column_family(from, to)
   }
   
+  def listKeyspaces : Set[String] = {
+    Set(cass.describe_keyspaces.toSeq : _*)
+  }
+  
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column]
   def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn]*/
   
-  private def createRowMap = new DefaultHashMap[Array[Byte], MuteMap]({ key =>
-    new MapWrapper(new DefaultHashMap[String, JList[thrift.Mutation]]({ cf =>
+  private def createRowMap = new ArrayKeyedHashMap[Byte, MuteMap]({ key =>
+    new JMapWrapper(new DefaultHashMap[String, JList[thrift.Mutation]]({ cf =>
       new JListWrapper(new ListBuffer[thrift.Mutation])
     }))
   })

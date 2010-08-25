@@ -11,6 +11,8 @@ class ColumnFamily(ksName : String,
     defaultR : ReadConsistency,
     defaultW : WriteConsistency,
     defaultClock : Clock) {
+      
+  def apply[T](f : ColumnFamily => T) = f(this)
     
   def selector[R](row : R)(implicit ser : Serializer[R]) = 
     new Selector(List(ser.serialize(row)))
@@ -18,7 +20,8 @@ class ColumnFamily(ksName : String,
   def selector[R](rows : List[R])(implicit ser : Serializer[R]) =
     new Selector(rows.map(ser.serialize(_)))
     
-  def batch(clock : Clock = defaultClock) = new Put(clock)
+  def batch = new Put(defaultClock)
+  def batch(clock : Clock) = new Put(clock)
     
   def get(selector : Readable, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
     provider.withClient(_.get(ksName, selector.toRead(cfName), consistency))
@@ -40,13 +43,16 @@ class SuperColumnFamily(ksName : String,
     defaultW : WriteConsistency,
     defaultClock : Clock) {
 
+  def apply[T](f : SuperColumnFamily => T) = f(this)
+
   def selector[R](row : R)(implicit ser : Serializer[R]) = 
     new SuperSelector(List(ser.serialize(row)))
 
   def selector[R](rows : List[R])(implicit ser : Serializer[R]) =
     new SuperSelector(rows.map(ser.serialize(_)))
     
-  def batch(clock : Clock = defaultClock) = new SuperPut(clock)
+  def batch = new SuperPut(defaultClock)
+  def batch(clock : Clock) = new SuperPut(clock)
 
   def get(selector : SuperSelector, consistency : ReadConsistency = defaultR) : RowIterator[SuperColumn] = {
     provider.withClient(_.superGet(ksName, selector.toRead(cfName), consistency))

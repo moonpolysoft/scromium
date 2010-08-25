@@ -7,6 +7,8 @@ import clocks._
 
 class Keyspace(val name : String, val provider : ClientProvider) extends Log {
   
+  def apply[T](f : Keyspace => T) = f(this)
+  
   def columnFamily(cfName : String, 
     defaultReadConsistency : ReadConsistency = ReadConsistency.Quorum, 
     defaultWriteConsistency : WriteConsistency = WriteConsistency.Quorum,

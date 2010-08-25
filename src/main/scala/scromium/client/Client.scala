@@ -45,6 +45,7 @@ trait Client {
   def renameKeyspace(from : String, to : String)
   def dropColumnFamily(name : String)
   def renameColumnFamily(from : String, to : String)
+  def listKeyspaces : Set[String]
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column]
   def superScan(scanner : Scanner[SuperColumn], c : ReadConsistency) : RowIterator[SuperColumn]*/
 }
@@ -81,6 +82,7 @@ class JMXClient(cl : Client) extends Client {
   def renameKeyspace(from : String, to : String) = cl.renameKeyspace(from, to)
   def dropColumnFamily(name : String) = cl.dropColumnFamily(name)
   def renameColumnFamily(from : String, to : String) = cl.renameColumnFamily(from, to)
+  def listKeyspaces : Set[String] = cl.listKeyspaces
   
 /*  def scan(scanner : Scanner[Column], c : ReadConsistency) : RowIterator[Column] = {
     scanLoad.mark(1)

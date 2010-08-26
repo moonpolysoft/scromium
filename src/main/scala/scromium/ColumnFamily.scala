@@ -36,6 +36,12 @@ class ColumnFamily(ksName : String,
     provider.withClient(_.get(ksName, selector.toRead(cfName), consistency))
   }
   
+  def deleteColumn[R,C](row : R, column : C, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW)
+      (implicit rSer : Serializer[R], cSer : Serializer[C]) = {
+    val selector = new Selector(List(rSer.serialize(row))).column(cSer.serialize(column))
+    delete(selector, clock, consistency)
+  }
+  
   def delete(selector : Deletable, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
     provider.withClient(_.delete(ksName, selector.toDelete(cfName, clock), consistency))
   }
@@ -90,6 +96,21 @@ class SuperColumnFamily(ksName : String,
   def get(selector : Readable) : RowIterator[Column] = get(selector, defaultR)
   def get(selector : Readable, consistency : ReadConsistency) : RowIterator[Column] = {
     provider.withClient(_.get(ksName, selector.toRead(cfName), consistency))
+  }
+  
+  def deleteSuperColumn[R,S](row : R, sc : S, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW)
+      (implicit rSer : Serializer[R], scSer : Serializer[S]) {
+    val selector = new SuperSelector(List(rSer.serialize(row))).
+      superColumn(scSer.serialize(sc))
+    provider.withClient(_.delete(ksName, selector.toDelete(cfName, clock), consistency))
+  }
+  
+  def deleteSubColumn[R,S,C](row : R, sc : S, c : C, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW)
+      (implicit rSer : Serializer[R], scSer : Serializer[S], cSer : Serializer[C]) {
+    val selector = new SuperSelector(List(rSer.serialize(row))).
+      superColumn(scSer.serialize(sc)).
+      subColumn(cSer.serialize(c))
+    provider.withClient(_.delete(ksName, selector.toDelete(cfName, clock), consistency))
   }
   
   def delete(selector : Deletable, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {

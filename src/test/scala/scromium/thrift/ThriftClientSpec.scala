@@ -26,9 +26,23 @@ class ThriftClientSpec extends Specification with Mockito with TestHelper {
               cf.put(put)
             }
 
-            val selector = cf.selector("row1").column("c1")
             val column = cf.getColumn("row1", "c1").get
             column.valueAs[String] must beSome("value")
+          }
+        }
+      }
+      
+      "execute delete commands" in {
+        cassandra.keyspace("Keyspace") { ks =>
+          ks.columnFamily("ColumnFamily") { cf =>
+            cf.batch { put =>
+              put.row("row1").insert("c1", "value")
+              cf.put(put)
+            }
+            
+            cf.deleteColumn("row1", "c1")
+            
+            cf.getColumn("row1", "c1") must beNone
           }
         }
       }
@@ -49,6 +63,36 @@ class ThriftClientSpec extends Specification with Mockito with TestHelper {
             
             val c = cf.getSubColumn("row1", "sc1", "c1").get
             c.valueAs[String] must beSome("value")
+          }
+        }
+      }
+      
+      "execute subcolumn delete commands" in {
+        cassandra.keyspace("Keyspace") { ks =>
+          ks.superColumnFamily("SuperColumnFamily") { cf =>
+            cf.batch { put =>
+              put.row("row1").superColumn("sc1").insert("c1", "value")
+              cf.put(put)
+            }
+            
+            cf.deleteSubColumn("row1", "sc1", "c1")
+            cf.getSuperColumn("row1", "sc1") must beNone
+            cf.getSubColumn("row1", "sc1", "c1") must beNone
+          }
+        }
+      }
+      
+      "execute supercolumn delete commands" in {
+        cassandra.keyspace("Keyspace") { ks =>
+          ks.superColumnFamily("SuperColumnFamily") { cf =>
+            cf.batch { put =>
+              put.row("row1").superColumn("sc1").insert("c1", "value")
+              cf.put(put)
+            }
+            
+            cf.deleteSuperColumn("row1", "sc1")
+            cf.getSuperColumn("row1", "sc1") must beNone
+            cf.getSubColumn("row1", "sc1", "c1") must beNone
           }
         }
       }

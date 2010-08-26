@@ -83,14 +83,14 @@ class SelectorSpec extends Specification with Mockito {
 
       "for a single supercolumn" in {
         val c = ByteArray(4)
-        val selector = new SuperSelector(rows).column(c)
+        val selector = new SuperSelector(rows).superColumn(c)
         val read = selector.toRead("cf")
         read must ==(Read(rows, "cf", Some(List(c)), None, None))
       }
 
       "for multiple supercolumns" in {
         val c = List(ByteArray(4), ByteArray(5), ByteArray(6))
-        val selector = new SuperSelector(rows).columns(c)
+        val selector = new SuperSelector(rows).superColumns(c)
         val read = selector.toRead("cf")
         read must ==(Read(rows, "cf", Some(c), None, None))
       }
@@ -105,7 +105,7 @@ class SelectorSpec extends Specification with Mockito {
       "a single subcolumn" in {
         val sc = ByteArray(4)
         val c = ByteArray(5)
-        val selector = new SuperSelector(rows).column(sc).subcolumn(c)
+        val selector = new SuperSelector(rows).superColumn(sc).subColumn(c)
         val read = selector.toRead("cf")
         read must ==(Read(rows, "cf", Some(List(sc)), Some(List(c)), None))
       }
@@ -113,7 +113,7 @@ class SelectorSpec extends Specification with Mockito {
       "multiple subcolumns" in {
         val sc = ByteArray(4)
         val c = List(ByteArray(5), ByteArray(6))
-        val selector = new SuperSelector(rows).column(sc).subcolumns(c)
+        val selector = new SuperSelector(rows).superColumn(sc).subColumns(c)
         val read = selector.toRead("cf")
         read must ==(Read(rows, "cf", Some(List(sc)), Some(c), None))
       }
@@ -121,7 +121,7 @@ class SelectorSpec extends Specification with Mockito {
       "a subcolumn slice" in {
         val sc = ByteArray(4)
         val slice = Slice(ByteArray(5), ByteArray(7))
-        val selector = new SuperSelector(rows).column(sc).slice(slice)
+        val selector = new SuperSelector(rows).superColumn(sc).slice(slice)
         val read = selector.toRead("cf")
         read must ==(Read(rows, "cf", Some(List(sc)), None, Some(slice)))
       }
@@ -136,14 +136,14 @@ class SelectorSpec extends Specification with Mockito {
 
       "for a single supercolumn" in {
         val c = ByteArray(4)
-        val selector = new SuperSelector(rows).column(c)
+        val selector = new SuperSelector(rows).superColumn(c)
         val delete = selector.toDelete("cf", clock)
         delete must ==(Delete(rows, "cf", Some(List(c)), None, None, clock))
       }
 
       "for multiple supercolumns" in {
         val c = List(ByteArray(4), ByteArray(5), ByteArray(6))
-        val selector = new SuperSelector(rows).columns(c)
+        val selector = new SuperSelector(rows).superColumns(c)
         val delete = selector.toDelete("cf", clock)
         delete must ==(Delete(rows, "cf", Some(c), None, None, clock))
       }
@@ -158,7 +158,7 @@ class SelectorSpec extends Specification with Mockito {
       "a single subcolumn" in {
         val sc = ByteArray(4)
         val c = ByteArray(5)
-        val selector = new SuperSelector(rows).column(sc).subcolumn(c)
+        val selector = new SuperSelector(rows).superColumn(sc).subColumn(c)
         val delete = selector.toDelete("cf", clock)
         delete must ==(Delete(rows, "cf", Some(List(sc)), Some(List(c)), None, clock))
       }
@@ -166,7 +166,7 @@ class SelectorSpec extends Specification with Mockito {
       "multiple subcolumns" in {
         val sc = ByteArray(4)
         val c = List(ByteArray(5), ByteArray(6))
-        val selector = new SuperSelector(rows).column(sc).subcolumns(c)
+        val selector = new SuperSelector(rows).superColumn(sc).subColumns(c)
         val delete = selector.toDelete("cf", clock)
         delete must ==(Delete(rows, "cf", Some(List(sc)), Some(c), None, clock))
       }
@@ -174,7 +174,7 @@ class SelectorSpec extends Specification with Mockito {
       "a subcolumn slice" in {
         val sc = ByteArray(4)
         val slice = Slice(ByteArray(5), ByteArray(7))
-        val selector = new SuperSelector(rows).column(sc).slice(slice)
+        val selector = new SuperSelector(rows).superColumn(sc).slice(slice)
         val delete = selector.toDelete("cf", clock)
         delete must ==(Delete(rows, "cf", Some(List(sc)), None, Some(slice), clock))
       }

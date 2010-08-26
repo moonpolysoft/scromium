@@ -41,10 +41,12 @@ object Thrift {
   }
   
   def unpackSuperColumn(corsc : ColumnOrSuperColumn) : scromium.SuperColumn = {
+    println("container " + corsc)
     superColumn(corsc.super_column)
   }
   
   def superColumn(sc : SuperColumn) : scromium.SuperColumn = {
+    println("sc " + sc)
     scromium.SuperColumn(sc.name, sc.columns.map(column(_)).toList)
   }
   
@@ -101,7 +103,7 @@ object Thrift {
   def readToColumnParent(r : Read) : ColumnParent = {
     val columnParent = new ColumnParent(r.columnFamily)
     r match {
-      case Read(_, _, Some(List(super_column)), _, _) =>
+      case Read(_, _, Some(List(super_column)), Some(subc :: tail), _) =>
         columnParent.super_column = super_column
       case _ =>
         Unit

@@ -1,6 +1,7 @@
 package scromium
 
 import serializers._
+import serializers.Serializers.ByteArraySerializer
 import client.ClientProvider
 import scromium.util.Log
 import clocks._
@@ -22,6 +23,14 @@ class ColumnFamily(ksName : String,
     
   def batch = new Put(defaultClock)
   def batch(clock : Clock) = new Put(clock)
+    
+  def getColumn[R,C](row : R, column : C, consistency : ReadConsistency = defaultR)
+      (implicit rSer : Serializer[R], cSer : Serializer[C]) : Option[Column] = {
+    val selector = new Selector(List(rSer.serialize(row))).column(cSer.serialize(column))
+    val results = get(selector, consistency)
+    for (row <- results; column <- row.columns) return Some(column)
+    return None
+  }
     
   def get(selector : Readable, consistency : ReadConsistency = defaultR) : RowIterator[Column] = {
     provider.withClient(_.get(ksName, selector.toRead(cfName), consistency))
@@ -54,12 +63,37 @@ class SuperColumnFamily(ksName : String,
   def batch = new SuperPut(defaultClock)
   def batch(clock : Clock) = new SuperPut(clock)
 
-  def get(selector : SuperSelector, consistency : ReadConsistency = defaultR) : RowIterator[SuperColumn] = {
+  def getSuperColumn[R,S](row : R, sc : S, consistency : ReadConsistency = defaultR)
+      (implicit rSer : Serializer[R], scSer : Serializer[S]) : Option[SuperColumn] = {
+    val selector = new SuperSelector(List(rSer.serialize(row))).
+      superColumn(scSer.serialize(sc))
+    val results = get(selector, consistency)
+    for (row <- results; column <- row.columns) return Some(column)
+    return None
+  }
+
+  def getSubColumn[R,S,C](row : R, sc : S, c : C, consistency : ReadConsistency = defaultR)
+      (implicit rSer : Serializer[R], scSer : Serializer[S], cSer : Serializer[C]) : Option[Column] = {
+    val selector = new SuperSelector(List(rSer.serialize(row))).
+      superColumn(scSer.serialize(sc)).
+      subColumn(cSer.serialize(c))
+    val results = get(selector, consistency)
+    for (row <- results; c <- row.columns) return Some(c)
+    return None
+  }  
+
+  def get(selector : SuperReadable) : RowIterator[SuperColumn] = get(selector, defaultR)
+  def get(selector : SuperReadable, consistency : ReadConsistency) : RowIterator[SuperColumn] = {
     provider.withClient(_.superGet(ksName, selector.toRead(cfName), consistency))
   }
 
-  def delete(selector : SuperSelector, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
-    provider.withClient(_.delete(ksName, selector.toDelete(cfName,clock), consistency))
+  def get(selector : Readable) : RowIterator[Column] = get(selector, defaultR)
+  def get(selector : Readable, consistency : ReadConsistency) : RowIterator[Column] = {
+    provider.withClient(_.get(ksName, selector.toRead(cfName), consistency))
+  }
+  
+  def delete(selector : Deletable, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+    provider.withClient(_.delete(ksName, selector.toDelete(cfName, clock), consistency))
   }
 
   def put(put : SuperPut, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {

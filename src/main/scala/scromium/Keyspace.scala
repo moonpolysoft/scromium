@@ -19,4 +19,15 @@ class Keyspace(val name : String, val provider : ClientProvider) extends Log {
         defaultReadConsistency, 
         defaultWriteConsistency,
         defaultClock)
+        
+  def superColumnFamily(cfName : String,
+    defaultReadConsistency : ReadConsistency = ReadConsistency.Quorum,
+    defaultWriteConsistency : WriteConsistency = WriteConsistency.Quorum,
+    defaultClock : Clock = MicrosecondEpochClock) =
+      new SuperColumnFamily(name,
+        cfName,
+        provider,
+        defaultReadConsistency,
+        defaultWriteConsistency,
+        defaultClock)
 }

@@ -46,6 +46,13 @@ class ColumnFamily(ksName : String,
     provider.withClient(_.delete(ksName, selector.toDelete(cfName, clock), consistency))
   }
   
+  def putColumn[R,C,V](row : R, column : C, value : V, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW)
+      (implicit rSer : Serializer[R], cSer : Serializer[C], vSer : Serializer[V]) {
+    val put = batch(clock)
+    put.row(row)(rSer).insert(column, value)(cSer,vSer)
+    this.put(put, consistency)
+  }
+  
   def put(put : Put, consistency : WriteConsistency = defaultW) {
     provider.withClient(_.put(ksName, put.toWrites(cfName), consistency))
   }
@@ -117,7 +124,14 @@ class SuperColumnFamily(ksName : String,
     provider.withClient(_.delete(ksName, selector.toDelete(cfName, clock), consistency))
   }
 
-  def put(put : SuperPut, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW) {
+  def putSubColumn[R,S,C,V](row : R, sc : S, c : C, value : V, clock : Clock = defaultClock, consistency : WriteConsistency = defaultW)
+      (implicit rSer : Serializer[R], scSer : Serializer[S], cSer : Serializer[C], vSer : Serializer[V]) {
+    val put = batch(clock)
+    put.row(row)(rSer).superColumn(sc)(scSer).insert(c, value)(cSer, vSer)
+    this.put(put, consistency)
+  }
+
+  def put(put : SuperPut, consistency : WriteConsistency = defaultW) {
     provider.withClient(_.superPut(ksName, put.toWrites(cfName), consistency))
   }
 }

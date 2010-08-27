@@ -46,6 +46,30 @@ class ThriftClientSpec extends Specification with Mockito with TestHelper {
           }
         }
       }
+      
+      "execute batch updates and multiget" in {
+        cassandra.keyspace("Keyspace") { ks =>
+          ks.columnFamily("ColumnFamily") { cf =>
+            cf.batch { put =>
+              put.row("row1").insert("c1", "value1").insert("c2", "value2")
+              put.row("row2").insert("c3", "value3")
+              cf.put(put)
+            }
+            
+            val results = cf.get(cf.selector(List("row1", "row2")).columns(List("c1", "c2", "c3"))).toList
+            println("results " + results)
+            for (row <- results) {
+              if (row.keyAs[String] == Some("row1")) {
+                val cols = row.columns.toList
+                cols(0).valueAs[String] must beSome("value1")
+                cols(1).valueAs[String] must beSome("value2")
+              } else {
+                row.columns.next.valueAs[String] must beSome("value3")                
+              }
+            }
+          }
+        }
+      }
     }
     
     "SuperColumnFamily" in {

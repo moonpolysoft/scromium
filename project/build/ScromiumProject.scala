@@ -12,10 +12,11 @@ class ScromiumProject(info : ProjectInfo) extends DefaultProject(info) with Basi
   override def packageToPublishActions = super.packageToPublishActions ++ Seq(packageSrc,assembly)
   
   val codaRepo = "Coda Hale's Repository" at "http://repo.codahale.com/"
+  val guildAlt = "Cliff Moon's Guild Repository" at "http://cliffmoon.github.com/guild/repository/"
   val jetlangRepo = "Jet Lang Repository" at "http://jetlang.googlecode.com/svn/repo/"
   val nexus = "nexus" at "http://nexus.scala-tools.org/content/repositories/snapshots/"
   
-  val metrics = "com.yammer" %% "metrics" % "1.0.5"
+  val metrics = "com.yammer" %% "metrics" % "1.0.7"
   val guild = "com.codahale" %% "guild" % "0.1.1"
   val jetlang = "org.jetlang" % "jetlang" % "0.2.0" withSources()
   val pool = "commons-pool" % "commons-pool" % "1.5.4" withSources() intransitive()

@@ -39,7 +39,6 @@ object Cassandra extends Log {
     try {
       DatabaseDescriptor.createAllDirectories
       for (table <- DatabaseDescriptor.getTables) {
-        println("opening table " + table)
           Table.open(table)
       }
     
@@ -113,8 +112,7 @@ class Cassandra(connPool : ConnectionPool) {
     
     MessagingService.shutdown()
     for (table <- DatabaseDescriptor.getTables) {
-      println("closing table " + table)
-        Table.close(table)
+        Table.clear(table)
     }
     
     val server = ManagementFactory.getPlatformMBeanServer

@@ -3,52 +3,43 @@ package scromium.api
 import scromium._
 import serializers._
 import org.apache.cassandra.thrift
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
-import java.util.ArrayList
+import java.util.{HashMap,ArrayList,Map,List}
 import scala.collection.JavaConversions._
 import scromium.util.HexString._
 import scromium.util.Log
 
-class OpMap extends HashMap[String, MuteMap] {
-  override def default(key : String) : MuteMap = {
-    val m = new MuteMap
-    put(key, m)
-    m
-  }  
+class OpMap extends HashMap[String, MuteMap](100) {
+  def get(key : String) : MuteMap = {
+    super.get(key) match {
+      case null =>
+        val m = new MuteMap
+        put(key, m)
+        m
+      case v => v
+    }
+  }
 }
 
-class MuteMap extends HashMap[String, ArrayBuffer[thrift.Mutation]] {
-  override def default(key : String) : ArrayBuffer[thrift.Mutation] ={
-    val a = new ArrayBuffer[thrift.Mutation]
-    put(key,a)
-    a
-  } 
+class MuteMap extends HashMap[String, List[thrift.Mutation]](100) {
+  def get(key : String) : List[thrift.Mutation] ={
+    super.get(key) match {
+      case null =>
+        val a = new ArrayList[thrift.Mutation](20)
+        put(key,a)
+        a
+      case v => v
+    }
+  }
 }
 
 class BatchBuilder(ks : Keyspace) extends Log {
-  type HMuteMap = java.util.HashMap[String, java.util.List[thrift.Mutation]]
-  type HOpMap = java.util.HashMap[String, JMuteMap]
-  
-  type JMuteMap = java.util.Map[String, java.util.List[thrift.Mutation]]
-  type JOpMap = java.util.Map[String, JMuteMap]
 
   val operations = new OpMap
   
   def !(implicit consistency : WriteConsistency) {
-    val map = operations.foldLeft(new HOpMap) { (m , tuple) =>
-      val(rowKey, cfMap) = tuple
-      val mutationMap = cfMap.foldLeft(new HMuteMap) { (m, tuple) =>
-        val (cf, mutations) = tuple
-        m.put(cf, asList(mutations))
-        m
-      }
-      m.put(rowKey, mutationMap)
-      m
-    }
     ks.pool.withConnection { conn =>
-      debug("batch_mutate(" + ks.name + ", " + map + ", " + consistency.thrift + ")")
-      conn.batch_mutate(ks.name, map.asInstanceOf[JOpMap], consistency.thrift)
+      debug("batch_mutate(" + ks.name + ", " + operations + ", " + consistency.thrift + ")")
+      conn.batch_mutate(ks.name, operations.asInstanceOf[Map[String,Map[String,List[thrift.Mutation]]]], consistency.thrift)
     }
   }
 
@@ -60,8 +51,8 @@ class BatchBuilder(ks : Keyspace) extends Log {
     val builder = new RowBatchBuilder
     val result = block(builder)
     val muteMap = builder.toMap
-    muteMap.foreach { case (cf,muteList) => 
-      operations(row)(cf).appendAll(muteList)
+    muteMap.entrySet.foreach { entry => 
+      operations.get(row).get(entry.getKey).addAll(entry.getValue)
     }
     this
   }
@@ -89,7 +80,7 @@ class RowBatchBuilder {
     column.name = cAry
     column.timestamp = timestamp
     column.value = vSer.serialize(value)
-    muteMap(cf).append(mutation)
+    muteMap.get(cf).add(mutation)
     this
   }
   
@@ -103,7 +94,7 @@ class RowBatchBuilder {
               cSer : Serializer[B],
               vSer : Serializer[C]) : RowBatchBuilder = {
     val ((cf, sc), c) = ins
-    val ops = muteMap(cf)
+    val ops = muteMap.get(cf)
     val scAry = scSer.serialize(sc)
     val container = ops.find({ mut => mut.column_or_supercolumn.super_column.name == scAry }).getOrElse {
       val mute = new thrift.Mutation
@@ -111,7 +102,7 @@ class RowBatchBuilder {
       mute.column_or_supercolumn = container
       val superColumn = new thrift.SuperColumn
       container.super_column = superColumn
-      ops += mute
+      ops add mute
       superColumn.name = scAry
       superColumn.columns = new ArrayList[thrift.Column]
       mute

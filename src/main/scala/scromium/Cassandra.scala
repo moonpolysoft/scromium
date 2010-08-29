@@ -55,7 +55,11 @@ object Cassandra extends Log {
     } catch {
       case e : Throwable =>
         println("fuck " + e.getClass)
-        e.getCause.printStackTrace
+        if (e.getCause != null) {
+          e.getCause.printStackTrace
+        } else {
+          e.printStackTrace
+        }
         throw e
     }
   }

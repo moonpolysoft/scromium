@@ -12,7 +12,10 @@ class ThriftClusterDiscovery {
     val socket = new TSocket(seedHost, seedPort)
     socket.open
     val client = new thrift.Cassandra.Client(new TBinaryProtocol(socket))
-    val keyspaces = client.describe_keyspaces()
+    val keyspaces = client.describe_keyspaces.toList.filter { x => x != "system" }
+    if (keyspaces.isEmpty) {
+      return Seq(seedHost)
+    }
     val ks = keyspaces.head
     val ranges = client.describe_ring(ks)
     socket.close

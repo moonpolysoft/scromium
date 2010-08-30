@@ -6,7 +6,7 @@ import org.apache.thrift.transport.{TTransport, TSocket, TTransportException}
 import org.apache.thrift.protocol.TBinaryProtocol
 import scromium.util.Log
 
-class ThriftClientFactory(var hosts : Seq[String], 
+class ThriftClientFactory(var hosts : List[String], 
     val port : Int, 
     socketFactory : ThriftSocketFactory) extends PoolableObjectFactory with Log {
   if (hosts.length == 0) {

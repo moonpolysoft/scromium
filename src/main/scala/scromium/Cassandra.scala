@@ -1,6 +1,7 @@
 package scromium
 
-import connection._
+import client._
+import thrift._
 import scromium.reflect.Reflect._
 import scromium.util.Log
 import java.io._
@@ -24,7 +25,7 @@ object Cassandra extends Log {
   }
   
   def start(map : Map[String, Any]) : Cassandra = {
-    new Cassandra(createConnectionPool(map))
+    new Cassandra(createClientProvider(map))
   }
   
   def start() : Cassandra = {    
@@ -46,9 +47,9 @@ object Cassandra extends Log {
       CompactionManager.instance.checkAllColumnFamilies*/
       StorageService.instance.initServer
       val server = new CassandraServer
-      val pool =  new ConnectionPool {
-        def withConnection[T](block : Client => T) : T = {
-          block(new TestClient(server))
+      val pool =  new ClientProvider {
+        def withClient[T](block : Client => T) : T = {
+          block(new ThriftClient(server))
         }
       }
       new Cassandra(pool)
@@ -68,13 +69,13 @@ object Cassandra extends Log {
     "port" -> 9160, 
     "maxIdle" -> 10, 
     "initCapacity" -> 10,
-    "connectionPool" -> "CommonsConnectionPool")
+    "clientProvider" -> "ThriftClientProvider")
     
-  private def createConnectionPool(config : Map[String, Any]) : ConnectionPool = {
+  private def createClientProvider(config : Map[String, Any]) : ClientProvider = {
     implicit val classLoader = this.getClass.getClassLoader
     
-    val claz = config("connectionPool").asInstanceOf[String]
-    New(claz)(config, new SocketFactory, new ClusterDiscovery)
+    val claz = config("clientProvider").asInstanceOf[String]
+    New(claz)(config)
   }
   
   private def getConfig(file : File) : Map[String, Any] = {
@@ -109,8 +110,11 @@ object Cassandra extends Log {
 }
 
 
-class Cassandra(connPool : ConnectionPool) {
-  def keyspace(name : String) = new Keyspace(name, connPool)
+class Cassandra(provider : ClientProvider) {
+  def keyspace(name : String) = new Keyspace(name, provider)
+  
+  
+  def admin = new Admin(provider)
   
   def teardownTest() {
     
@@ -133,9 +137,9 @@ class Cassandra(connPool : ConnectionPool) {
       server.unregisterMBean(name)
     }
     
-    FileUtils.deleteDir(new File(DatabaseDescriptor.getLogFileLocation))
+    FileUtils.deleteRecursive(new File(DatabaseDescriptor.getCommitLogLocation))
     for (dir <- DatabaseDescriptor.getAllDataFileLocations) {
-      FileUtils.deleteDir(new File(dir))
+      FileUtils.deleteRecursive(new File(dir))
     }
   }
 }

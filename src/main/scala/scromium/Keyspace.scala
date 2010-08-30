@@ -1,161 +1,33 @@
 package scromium
 
-import api._
 import serializers._
-import org.apache.cassandra.thrift
-import connection.ConnectionPool
-import scromium.util.HexString._
+import client.ClientProvider
 import scromium.util.Log
+import clocks._
 
-/*object Keyspace {
-  var pool : ConnectionPool = null
+class Keyspace(val name : String, val provider : ClientProvider) extends Log {
   
-  def apply[A](ksName : String)(block : Keyspace => A) : A = {
-    if (pool == null) {
-      throw new Exception("Cassandra client needs to be started first.")
-    }
-    val ks = new Keyspace(ksName, pool)
-    block(ks)
-  }
-}*/
-
-class Keyspace(val name : String, val pool : ConnectionPool) extends Log {
+  def apply[T](f : Keyspace => T) = f(this)
   
-  def apply[A](block : Keyspace => A) : A = {
-    block(this)
-  }
-  
-  def get(row : Array[Byte], cf : String) = new CFPath(this, toHexString(row), cf)
-  def get(row : String, cf : String) = new CFPath(this, row, cf)
-  
-  def remove[A](row : Array[Byte], rem : (String, A))
-    (implicit cSer : Serializer[A],
-              consistency : WriteConsistency) : Unit = remove(toHexString(row), rem)(cSer, consistency)
-
-  def remove[A](row : String, rem : (String, A))
-    (implicit cSer : Serializer[A],
-              consistency : WriteConsistency) : Unit = remove(row, rem, Clock.timestamp)(cSer, consistency)
-  
-  def remove[A](row : Array[Byte], rem : (String, A), timestamp: Long)
-    (implicit cSer : Serializer[A],
-              consistency : WriteConsistency) : Unit = remove(toHexString(row), rem, timestamp)(cSer, consistency)
-  
-  def remove[A](row : String, rem : (String, A), timestamp : Long)
-    (implicit cSer : Serializer[A],
-              consistency : WriteConsistency) {
-    val (cf, c) = rem
-    pool.withConnection { conn =>
-      val columnPath = new thrift.ColumnPath
-      columnPath.column_family = cf
-      columnPath.column = cSer.serialize(c)
-      debug { "remove(" + name + ", " + row + ", " + columnPath + ")" }
-      conn.remove(name, row, columnPath, timestamp, consistency.thrift)
-    }
-  }
-  
-  def remove[A](row : Array[Byte], cf : String, timestamp: Long)
-    (implicit consistency : WriteConsistency) : Unit = remove(toHexString(row), cf, timestamp)(consistency)
-  
-  def remove[A](row : String, cf : String, timestamp : Long)
-    (implicit consistency : WriteConsistency) {
-    pool.withConnection { conn =>
-      val columnPath = new thrift.ColumnPath
-      columnPath.column_family = cf
-      debug { "remove(" + name + ", " + row + ", " + columnPath + ")" }
-      conn.remove(name, row, columnPath, timestamp, consistency.thrift)
-    }
-  }
-  
-  /**
-   * Insert using a byte array as the row key and use the default timestmap
-   */
-  def insert[A, B](row : Array[Byte], ins : (String, A), value : B)
-    (implicit cSer : Serializer[A],
-              vSer : Serializer[B],
-              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value)(cSer, vSer, consistency)
-  
-  def insert[A, B](row : String, ins : (String, A), value : B)
-    (implicit cSer : Serializer[A],
-              vSer : Serializer[B],
-              consistency : WriteConsistency) : Unit = insert(row, ins, value, Clock.timestamp)(cSer, vSer, consistency)
-  //---------------------------------------------------------------------
-  
-  //---------------------------------------------------------------------
-  //insert with timestamp
-  def insert[A, B](row : Array[Byte], ins : (String, A), value : B, timestamp : Long)
-    (implicit cSer : Serializer[A],
-              vSer : Serializer[B],
-              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value, timestamp)(cSer, vSer, consistency)
-  
-  def insert[A, B](row : String, ins : (String, A), value : B, timestamp : Long)
-    (implicit cSer : Serializer[A],
-              vSer : Serializer[B],
-              consistency : WriteConsistency) {
-    val (cf, c) = ins
-    pool.withConnection { conn =>
-      val columnPath = new thrift.ColumnPath
-      columnPath.column_family = cf
-      columnPath.column = cSer.serialize(c)
-      debug { "insert(" + name + ", " + row + ", " + columnPath + ", " + vSer.serialize(value) + ")" }
-      conn.insert(name, row, columnPath, vSer.serialize(value), timestamp, consistency.thrift)
-    }
-  }
-  //---------------------------------------------------------------------
-  
-  //---------------------------------------------------------------------
-  //supercolumn insert without timestamp
-  def insert[A, B, C](row : Array[Byte], ins : ((String, A), B), value : C)
-    (implicit scSer : Serializer[A],
-              cSer : Serializer[B],
-              vSer : Serializer[C],
-              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value)(scSer, cSer, vSer, consistency)
-  
-  def insert[A, B, C](row : String, ins : ((String, A), B), value : C)
-    (implicit scSer : Serializer[A],
-              cSer : Serializer[B],
-              vSer : Serializer[C],
-              consistency : WriteConsistency) : Unit = insert(row, ins, value, Clock.timestamp)(scSer, cSer, vSer, consistency)
-  //---------------------------------------------------------------------
-  
-  //---------------------------------------------------------------------
-  //supercolumn insert with timestamp
-  def insert[A, B, C](row : Array[Byte], ins : ((String, A), B), value : C, timestamp : Long)
-    (implicit scSer : Serializer[A],
-              cSer : Serializer[B],
-              vSer : Serializer[C],
-              consistency : WriteConsistency) : Unit = insert(toHexString(row), ins, value, timestamp)(scSer, cSer, vSer, consistency)
-  
-  def insert[A, B, C](row : String, ins : ((String, A), B), value : C, timestamp : Long)
-    (implicit scSer : Serializer[A],
-              cSer : Serializer[B],
-              vSer : Serializer[C],
-              consistency : WriteConsistency) {
-    val ((cf, sc), c) = ins
-    pool.withConnection { conn =>
-      val columnPath = new thrift.ColumnPath
-      columnPath.column_family = cf
-      columnPath.super_column = scSer.serialize(sc)
-      columnPath.column = cSer.serialize(c)
-      debug {"insert(" + name + ", " + row + ", " + columnPath + ", " + vSer.serialize(value) + ", " + timestamp + ", " + consistency.thrift + ")"}
-      conn.insert(name, row, columnPath, vSer.serialize(value), timestamp, consistency.thrift)
-    }
-  }
-  //---------------------------------------------------------------------
-  
-  def range(cf : String) = new ColumnRangeQueryBuilder(this, cf)
-  
-  def rangeSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnRangeQueryBuilder(this, cf, ser.serialize(superColumn))
-  def rangeSuper(cf : String) = new SuperColumnRangeQueryBuilder(this, cf)
-  
-  def multiget(cf : String) = new ColumnMultiQueryBuilder(this, cf)
-  
-  def multigetSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnMultiQueryBuilder(this, cf, ser.serialize(superColumn))
-  def multigetSuper(cf : String) = new SuperColumnMultiQueryBuilder(this, cf)
-  
-  def scan(cf : String) = new ColumnScanBuilder(this, cf)
-  
-  def scanSuper[A](cf : String, superColumn : A)(implicit ser : Serializer[A]) = new ColumnScanBuilder(this, cf, ser.serialize(superColumn))
-  def scanSuper(cf : String) = new SuperColumnScanBuilder(this, cf)
-  
-  def batch() = new BatchBuilder(this)
+  def columnFamily(cfName : String, 
+    defaultReadConsistency : ReadConsistency = ReadConsistency.Quorum, 
+    defaultWriteConsistency : WriteConsistency = WriteConsistency.Quorum,
+    defaultClock : Clock = MicrosecondEpochClock) = 
+      new ColumnFamily(name, 
+        cfName, 
+        provider, 
+        defaultReadConsistency, 
+        defaultWriteConsistency,
+        defaultClock)
+        
+  def superColumnFamily(cfName : String,
+    defaultReadConsistency : ReadConsistency = ReadConsistency.Quorum,
+    defaultWriteConsistency : WriteConsistency = WriteConsistency.Quorum,
+    defaultClock : Clock = MicrosecondEpochClock) =
+      new SuperColumnFamily(name,
+        cfName,
+        provider,
+        defaultReadConsistency,
+        defaultWriteConsistency,
+        defaultClock)
 }

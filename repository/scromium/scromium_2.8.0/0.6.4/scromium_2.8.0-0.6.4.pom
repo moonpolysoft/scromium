@@ -44,8 +44,8 @@
         </dependency>
         <dependency>
             <groupId>com.codahale</groupId>
-            <artifactId>guild_2.8.0</artifactId>
-            <version>0.1.1</version>
+            <artifactId>guild_2.8.0.Beta1</artifactId>
+            <version>0.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

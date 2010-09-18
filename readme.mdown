@@ -58,7 +58,14 @@ deliver Scromium's configuration.
     import scromium.api._
     import scromium.serializers.Serializers._
     
-    val cassandra = Cassandra.start
+    val conf = Map("connectionPool" -> "scromium.connection.CommonsConnectionPool",
+        "seedHost" -> "127.0.0.1",
+        "seedPort" -> 9160,
+        "maxIdle" -> 10,
+        "initCapacity" -> 10,
+        "clientProvider" -> "scromium.thrift.ThriftClientProvider")
+    val cassandra = Cassandra.start(conf)
+
     
 Most of the API is chainable, except where it either is not possible or does not make sense.  The idea
 is to be able to build up queries and inserts naturally.  This piece of code opens up the keyspace "fuck"
@@ -71,68 +78,69 @@ block of code will all be using the same read or write consistency level.
       
       implicit val consistency = ReadConsistency.One
       
-The get API is oriented around around either retrieving a single cell or a single supercolumn.  It uses the `%` operator
-to denote a supercolumn when chaining paths together.  This lets the API know that you are expecting to
-query a supercolumn, thus making sure that the correct types are returned from the query.  This saves from having
-ugly casts and union types like ColumnOrSuperColumn.
+The get API is oriented around around either retrieving a single cell or a single supercolumn.  You pass parent objects to sub codeblocks to do stuff.  
+Pretty self explanatory 
       
-      val column = ks.get("row", "column_family") % "supercolumn" / "column" ! ReadConsistency.Quorum
-      val supercolumn = ks.get("row", "column_family") % "supercolumn" !
-      val column = ks.get("row", "cf") / "c" !
+	cassandra.keyspace("Keyspace") { ks =>
+         
+		//Get Methods 
+		//for Column
+		ks.columnFamily("ColumnFamily") { cf =>           
+			val column = cf.getColumn("row1", "c1").get            
+		}
+
+		//for SuperColumn
+		ks.superColumnFamily("SuperColumnFamily") { cf =>
+	
+			val sc = cf.getSuperColumn("row1", "sc1").get
+	   
+			val c = cf.getSubColumn("row1", "sc1", "c1").get
+			
+		}
+	}
+
       
 Range queries are performed via the range and rangeSuper methods of Keyspace.  Range queries require using
 the OrderPreservingPartitioner, so they will fail with an incorrectly configured Cassandra node.
+    
+
+        cassandra.keyspace("Keyspace") { ks =>
+            ks.superColumnFamily("SuperColumnFamily") { scf =>
+                val slice = Slice("fuck", "shit")
+                val rows = List("a".getBytes, "b".getBytes, "c".getBytes)
+                val selector = new Selector(rows).slice(slice)
+
+                val iterColumns = scf.get(selector)
+            }
+	}
+  
       
-      //query a column path via a supercolumn using a keyrange (requires OPP)
-      val query = ks.rangeSuper("super_column_family", "supercolumn")
-      //or use a path to a regular column family
-      val query = ks.range("column_family")
-      //or a path to a supercolumn family
-      val query = ks.rangeSuper("super_column_family")
+Inserts and batch inserts are pretty simple as well,
+
+	cassandra.keyspace("Keyspace") { ks =>
+		ks.columnFamily("ColumnFamily") { cf =>
+			cf.batch { put =>
+				val r = put.row("row1")
+				r.insert("c1", "value")
+				//.. add more columns/rows to batch it if you want
+				cf.put(put)
+			}
+		}
+	}
+
+
+Multigets, again really really simple
+
+	cassandra.keyspace("Keyspace") { ks =>
+		ks.columnFamily("ColumnFamily") { cf =>
+            
+			val results = cf.get(cf.selector(List("row1", "row2")).columns(List("c1", "c2", "c3"))).toList
+			println("results " + results)
+           
+		}
+	}
+
       
-      //we can then set the key range
-      query.keys("from_key", "to_key", limit=100)
-      
-      //then we can set the columns explicitly like this
-      query.columns("column1", "column2", "column3")
-      //or as a range
-      query.columns("start", "end" limit=100)
-      //and then execute the query
-      query ! ReadConsistency.Quorum
-      
-Multiget calls the underlying multiget_slice method in the Cassandra API.  It operates in a similar way
-to range queries.
-      
-      //multiget_slice queries
-      val query = ks.multiget("cf", "supercolumn")
-      
-      query.keys("row1"...)
-      // we can set the columns explicitly like this
-      query.columns("column1", "column2", "column3")
-      // or as a range
-      query.columns("start", "end" limit=100)
-      // execute the query
-      query ! ReadConsistency.Quorum
-      
-Inserts use array notation to show column and supercolumn paths
-      
-      ks.insert[T]("row", "column_family" -> "supercolumn" -> "column", value)
-      ks.insert("row", "column_family" -> "column", value, timestamp, WriteConsistency.One)
-      
-Batch inserts are designed to be built up a little at a time.
-      
-      val batch = ks.batch
-      
-`batch.row("row")` takes a block where it passes in a RowBatchBuilder which can be used to batch
-up operations for that particular row.
-      
-      batch.row("row1") { row =>
-        row.add("cf" -> "sc" -> "c", value)
-      }.row("row2") { row =>
-        row.add("cf" -> "sc2" -> "c2", value2)
-      }
-      
-      batch!
       
 Throughout all of these examples not much attention has been paid to the types of the columns,
 supercolumns, and values.  Cassandra deals with these internally as opaque byte arrays.  Scromium
@@ -152,14 +160,20 @@ You can define your own Serializers.
       
 And that will allow you to give a Fuck and get a Fuck as long as that implicit object is in scope.
 
-      ks.insert("row", "cf" -> "c", new Fuck)
-      
-      val result = ks.get("row") / "cf" / "c" !;
-      val myFuck = result.valueAs[Fuck]
-
-Simple as Fuck!
-
-    }
+	cassandra.keyspace("Keyspace") { ks => {
+		ks.columnFamily("ColumnFamily") { cf =>
+			cf.batch { put =>
+				val r = put.row("row")
+				r.insert("c1", new Fuck)				
+				cf.put(put)
+			}
+			
+		val myFuck = cf.getColumn("row", "c1").get.valueAs[Fuck]
+			
+		// Simple as Fuck!					
+		}
+	}
+    
     
 Testing Is Hard
 -------

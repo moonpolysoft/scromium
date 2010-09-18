@@ -31,7 +31,7 @@ class Selector(val rows : List[Array[Byte]]) extends Readable with Deletable {
   def toDelete(cf : String, clock : Clock) = new Delete(rows, cf, clock=clock)
 }
 
-class SuperSelector(rows : List[Array[Byte]]) extends Readable with Deletable {
+class SuperSelector(rows : List[Array[Byte]]) extends SuperReadable with Deletable {
   
   def superColumn[C](column : C)(implicit ser : Serializer[C]) =
     new SuperColumnSelector(rows, ser.serialize(column))

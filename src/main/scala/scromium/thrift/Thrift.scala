@@ -41,12 +41,12 @@ object Thrift {
   }
   
   def unpackSuperColumn(corsc : ColumnOrSuperColumn) : scromium.SuperColumn = {
-    println("container " + corsc)
+/*    println("container " + corsc)*/
     superColumn(corsc.super_column)
   }
   
   def superColumn(sc : SuperColumn) : scromium.SuperColumn = {
-    println("sc " + sc)
+/*    println("sc " + sc)*/
     scromium.SuperColumn(sc.name, sc.columns.map(column(_)).toList)
   }
   
@@ -71,6 +71,13 @@ object Thrift {
   def slicePredicate(slice : scromium.Slice) : SlicePredicate = {
     val predicate = new SlicePredicate
     val sliceRange = new SliceRange(slice.start, slice.end, slice.reversed, slice.limit.get)
+    predicate.slice_range = sliceRange
+    predicate
+  }
+  
+  def slicePredicate : SlicePredicate = {
+    val predicate = new SlicePredicate
+    val sliceRange = new SliceRange(Array[Byte](), Array[Byte](), false, 1000)
     predicate.slice_range = sliceRange
     predicate
   }
@@ -119,7 +126,7 @@ object Thrift {
     case Read(_, _, Some(columns), _, _) =>
       slicePredicate(columns)
     case _ =>
-      throw new Exception("incomplete read command : " + r)
+      slicePredicate
   }
   
   def ksDef(ks : KeyspaceDef) : KsDef = {

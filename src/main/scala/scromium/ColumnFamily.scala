@@ -24,6 +24,14 @@ class ColumnFamily(ksName : String,
   def batch = new Put(defaultClock)
   def batch(clock : Clock) = new Put(clock)
     
+  def getRow[R](row : R, consistency : ReadConsistency = defaultR)
+      (implicit rSer : Serializer[R]) : Option[Row[Column]] = {
+   val selector = new Selector(List(rSer.serialize(row)))
+   val results = get(selector, consistency)
+   for (row <- results) return Some(row)
+   return None 
+  }
+    
   def getColumn[R,C](row : R, column : C, consistency : ReadConsistency = defaultR)
       (implicit rSer : Serializer[R], cSer : Serializer[C]) : Option[Column] = {
     val selector = new Selector(List(rSer.serialize(row))).column(cSer.serialize(column))
@@ -75,6 +83,14 @@ class SuperColumnFamily(ksName : String,
     
   def batch = new SuperPut(defaultClock)
   def batch(clock : Clock) = new SuperPut(clock)
+
+  def getRow[R](row : R, consistency : ReadConsistency = defaultR)
+      (implicit rSer : Serializer[R]) : Option[Row[SuperColumn]] = {
+    val selector = new SuperSelector(List(rSer.serialize(row)))
+    val results = get(selector, consistency)
+    for (row <- results) return Some(row)
+    return None
+  }
 
   def getSuperColumn[R,S](row : R, sc : S, consistency : ReadConsistency = defaultR)
       (implicit rSer : Serializer[R], scSer : Serializer[S]) : Option[SuperColumn] = {

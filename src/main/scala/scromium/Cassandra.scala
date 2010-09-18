@@ -65,11 +65,11 @@ object Cassandra extends Log {
     }
   }
   
-  private val default = Map("host" -> "localhost", 
-    "port" -> 9160, 
+  private val default = Map("seedHost" -> "localhost", 
+    "seedPort" -> 9160, 
     "maxIdle" -> 10, 
     "initCapacity" -> 10,
-    "clientProvider" -> "ThriftClientProvider")
+    "clientProvider" -> "scromium.thrift.ThriftClientProvider")
     
   private def createClientProvider(config : Map[String, Any]) : ClientProvider = {
     implicit val classLoader = this.getClass.getClassLoader

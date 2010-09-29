@@ -1,8 +1,8 @@
 package scromium
 
 import serializers._
+import util._
 import scala.collection.JavaConversions._
-import org.apache.commons.codec.binary.Hex
 
 case class SuperColumn(val name : Array[Byte], 
   val columns : List[Column]) extends Iterable[Column] with Columnar {
@@ -11,6 +11,6 @@ case class SuperColumn(val name : Array[Byte],
   def iterator = columns.iterator
   
   override def toString() : String = {
-    "GetSuperColumn(" + Hex.encodeHexString(name) + "," + columns + ")"
+    "SuperColumn(" + HexString.toHexString(name) + "," + columns + ")"
   }
 }

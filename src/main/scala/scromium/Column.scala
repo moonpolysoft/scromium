@@ -1,7 +1,7 @@
 package scromium
 
 import scromium.serializers.Deserializer
-import org.apache.commons.codec.binary.Hex
+import util.HexString
 
 case class Column(val name : Array[Byte], 
                   val value : Array[Byte], 
@@ -11,6 +11,6 @@ case class Column(val name : Array[Byte],
   def nameAs[T](implicit des : Deserializer[T]) = des.deserialize(name)
   
   override def toString() : String = {
-    "Column(" + Hex.encodeHexString(name) + "," + Hex.encodeHexString(value) + "," + timestamp + ")"
+    "Column(" + HexString.toHexString(name) + "," + HexString.toHexString(value) + "," + timestamp + ")"
   }
 }

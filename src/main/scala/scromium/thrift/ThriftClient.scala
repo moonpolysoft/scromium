@@ -3,11 +3,11 @@ package scromium.thrift
 import scromium._
 import scromium.meta._
 import scromium.client._
-import scromium.util.{DefaultHashMap, ArrayKeyedHashMap, Log}
+import scromium.util.{DefaultHashMap, ArrayKeyedHashMap, Log, HexString}
 import org.apache.cassandra.thrift
 import org.apache.thrift.transport.{TTransport, TTransportException}
 import java.util.{Map => JMap, List => JList}
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.{ListBuffer, StringBuilder}
 import scala.collection.JavaConversions._
 import Thrift._
 
@@ -36,7 +36,7 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client with Log {
       val mutes = rowMap(write.key)(write.cf)
       mutes ++= write.columns.map(columnMutation(_))
     }
-    debug("batch_mutate(" + rowMap + "," + c.thrift + ")")
+    debug("batch_mutate(" + stringify(rowMap) + "," + c.thrift + ")")
     cass.batch_mutate(rowMap, c.thrift)
   }
   
@@ -123,4 +123,15 @@ class ThriftClient(cass : thrift.Cassandra.Iface) extends Client with Log {
       new JListWrapper(new ListBuffer[thrift.Mutation])
     }))
   })
+  
+  private def stringify(map : ArrayKeyedHashMap[Byte,MuteMap]) : String = {
+    val buffer = new StringBuilder
+    buffer ++= "Map("
+    for((key,value) <- map) {
+      buffer ++= HexString.toHexString(key) + " -> " + value.toString + ","
+    }
+    buffer.deleteCharAt(buffer.length-1)
+    buffer ++= ")"
+    buffer.toString
+  }
 }
